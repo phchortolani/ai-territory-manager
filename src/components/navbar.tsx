@@ -25,9 +25,9 @@ export default function Navbar({ children }: { children: React.ReactNode }) {
     const [navigation, setNavigation] = useState(
         [
             { name: 'Calendário', href: 'schedule', current: true },
-         /*    { name: 'Saídas', href: 'saida', current: false }, */
+            /*    { name: 'Saídas', href: 'saida', current: false }, */
             { name: 'Territórios', href: 'territories', current: false },
-           /*  { name: 'Dirigentes', href: 'dirigentes', current: false }, */
+            /*  { name: 'Dirigentes', href: 'dirigentes', current: false }, */
         ])
 
     useEffect(() => {
@@ -43,18 +43,18 @@ export default function Navbar({ children }: { children: React.ReactNode }) {
     return (
         <>
             <div className="min-h-full">
-                <Disclosure as="nav" className="bg-gray-800">
+                <Disclosure as="nav" className="bg-[#292929]">
                     {({ open }) => (
                         <>
                             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                                <div className="flex h-16 items-center justify-between">
+                                <div className="flex items-center justify-between">
                                     <div className="flex items-center">
-                                        <div className="flex-shrink-0">
-                                            <img
-                                                className="h-8 w-8"
-                                                src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500"
-                                                alt="Your Company"
-                                            />
+                                        <div className=''>
+                                            <svg className='w-max rounded-lg p-0.5' viewBox="0.196 -3.387 502.027 509.369" width="72.027" height="79.369">
+                                                <rect x="0.196" y="-3.387" width="502.027" height="509.369" style={{ stroke: 'rgb(74, 109, 167)', strokeWidth: '0px', fill: 'rgb(74, 109, 167)' }} transform="matrix(1.0000000000000002, 0, 0, 1, 0, -7.105427357601002e-15)"></rect>
+                                                <text style={{ fill: 'rgb(255, 255, 255)', fontFamily: 'Calibri', fontSize: '9.50196px', letterSpacing: '-0.6px', strokeMiterlimit: '5.69', strokeWidth: '0px', textAnchor: 'middle', whiteSpace: 'pre' }} transform="matrix(9.15590763092041, 0, 0, 9.156008720397951, 247.4332617436835, 333.302434165812)">Alto do Baeta</text>
+                                                <text style={{ fill: 'rgb(255, 255, 255)', fontFamily: 'Calibri', fontSize: '9.50196px', fontWeight: '700', letterSpacing: '-0.6px', strokeMiterlimit: '4.72', strokeWidth: '0px', textAnchor: 'middle', whiteSpace: 'pre' }} transform="matrix(9.15590763092041, 0, 0, 9.156008720397951, 251.10866157872465, 219.5394624999085)">TERRITÓRIOS</text>
+                                            </svg>
                                         </div>
                                         <div className="hidden md:block">
                                             <div className="ml-10 flex items-baseline space-x-4">
@@ -64,8 +64,8 @@ export default function Navbar({ children }: { children: React.ReactNode }) {
                                                         href={item.href}
                                                         className={classNames(
                                                             item.current
-                                                                ? 'bg-gray-900 text-white'
-                                                                : 'text-gray-300 hover:bg-gray-700 hover:text-white',
+                                                                ? 'bg-gray-500 text-white'
+                                                                : 'text-gray-300 hover:bg-gray-900 hover:text-white',
                                                             'rounded-md px-3 py-2 text-sm font-medium'
                                                         )}
                                                         aria-current={item.current ? 'page' : undefined}
@@ -78,14 +78,14 @@ export default function Navbar({ children }: { children: React.ReactNode }) {
                                     </div>
                                     <div className="hidden md:block">
                                         <div className="ml-4 flex items-center md:ml-6">
-                                            <button
+                                       {/*      <button
                                                 type="button"
                                                 className="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                                             >
                                                 <span className="absolute -inset-1.5" />
                                                 <span className="sr-only">View notifications</span>
                                                 <BellIcon className="h-6 w-6" aria-hidden="true" />
-                                            </button>
+                                            </button> */}
 
                                             {/* Profile dropdown */}
                                             <Menu as="div" className="relative ml-3">
@@ -166,14 +166,14 @@ export default function Navbar({ children }: { children: React.ReactNode }) {
                                         <div className="ml-3">
                                             <div className="text-base font-medium leading-none text-white">{user.name}</div>
                                         </div>
-                                        <button
+                                {/*         <button
                                             type="button"
                                             className="relative ml-auto flex-shrink-0 rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                                         >
                                             <span className="absolute -inset-1.5" />
                                             <span className="sr-only">View notifications</span>
                                             <BellIcon className="h-6 w-6" aria-hidden="true" />
-                                        </button>
+                                        </button> */}
                                     </div>
                                     <div className="mt-3 space-y-1 px-2">
                                         {userNavigation.map((item) => (
