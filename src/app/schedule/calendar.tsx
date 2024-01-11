@@ -217,16 +217,19 @@ export default function Calendar({ schedule = [] }: props) {
                             {rounds_by_leaders[0]?.rounds[0]?.campaign && <div className='text-sm text-gray-400'>{rounds_by_leaders[0].rounds[0].campaign}</div>}
                         </h2>
                         <ol className="mt-4 space-y-1 text-sm leading-6 text-gray-500">
-                            <div className='flex justify-end border-b'>
-                                {edit ?
-                                    <SimpleButton onClick={() => setEdit(false)} typeBtn='secondary' className='mb-2'>
-                                        <div className='flex flex-row gap-2 justify-between items-center'><ArrowDownCircleIcon className='w-5 h-5' /> Fechar edição</div>
-                                    </SimpleButton>
-                                    : <div className='flex flex-row gap-2'>
-                                        <SimpleButton onClick={() => setEdit(true)} typeBtn='secondary' className='border-none mb-2'>Editar</SimpleButton>
-                                    </div>
-                                }
-                            </div>
+                            {
+                                rounds_by_leaders.length > 0 && <div className='flex justify-end border-b'>
+                                    {edit ?
+                                        <SimpleButton onClick={() => setEdit(false)} typeBtn='secondary' className='mb-2'>
+                                            <div className='flex flex-row gap-2 justify-between items-center'><ArrowDownCircleIcon className='w-5 h-5' /> Fechar edição</div>
+                                        </SimpleButton>
+                                        : <div className='flex flex-row gap-2'>
+                                            <SimpleButton onClick={() => setEdit(true)} typeBtn='secondary' className='border-none mb-2'>Editar</SimpleButton>
+                                        </div>
+                                    }
+                                </div>
+                            }
+
 
                             {rounds_by_leaders.length > 0 ? rounds_by_leaders.map(x =>
                                 <div key={x.leader} className='border-b  p-2 '>
