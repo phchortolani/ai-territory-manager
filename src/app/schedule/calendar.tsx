@@ -1,10 +1,7 @@
 'use client'
-import { Menu, Transition } from '@headlessui/react'
-import { ChevronRightIcon, ChevronLeftIcon, ExclamationTriangleIcon, CheckCircleIcon, XCircleIcon, BriefcaseIcon, VideoCameraIcon } from '@heroicons/react/24/outline'
+import { ChevronRightIcon, ChevronLeftIcon, ExclamationTriangleIcon, CheckCircleIcon, XCircleIcon, BriefcaseIcon, VideoCameraIcon, ArrowDownCircleIcon } from '@heroicons/react/24/outline'
 import {
     add,
-    addDays,
-    addMilliseconds,
     eachDayOfInterval,
     endOfMonth,
     endOfWeek,
@@ -22,11 +19,14 @@ import {
     startOfToday,
     startOfWeek
 } from 'date-fns'
-import { Fragment, useState } from 'react'
+import { useState } from 'react'
 
 import { ptBR } from 'date-fns/locale'
 import { RoundsDto } from '@/dtos/roundsDto'
 import { EStatus_territory } from '@/enums/status_territory'
+import { SimpleButton } from '@/components/buttons/simple_button'
+import { MarkRoundAsDone } from '@/services/roundsService'
+import { useRouter } from 'next/navigation'
 
 
 
@@ -41,14 +41,13 @@ type props = {
 
 export default function Calendar({ schedule = [] }: props) {
     let today = startOfToday();
+    const [modalOpen, setOpenModal] = useState<boolean>(false)
+    const [selectedDay, setSelectedDay] = useState(today)
+    const [currentMonth, setCurrentMonth] = useState(format(today, 'MMM-yyyy'))
+    const [edit, setEdit] = useState<boolean>(false)
 
 
-    let [selectedDay, setSelectedDay] = useState(today)
-    let [currentMonth, setCurrentMonth] = useState(format(today, 'MMM-yyyy'))
     let firstDayCurrentMonth = parse(currentMonth, 'MMM-yyyy', new Date())
-
-
-
 
 
     let days = eachDayOfInterval({
@@ -83,9 +82,18 @@ export default function Calendar({ schedule = [] }: props) {
         else return <CheckCircleIcon className={`w-5 h-5 text-white rounded-full bg-blue-500`} />
     }
 
+
     return (
-        <div className="pt-16">
-            <div className="max-w-md px-4 mx-auto sm:px-7 md:max-w-4xl md:px-6">
+        <div>
+            <dialog className='w-screen h-screen fixed z-50 bg-gray-400/30 top-0 overflow-hidden ' open={modalOpen}>
+                <div className='h-[calc(100%-2rem)] mx-1 md:mx-8 my-2  flex justify-center items-center bg-white rounded-md shadow-lg'>
+                    <SimpleButton typeBtn='secondary' onClick={() => setOpenModal(false)}>
+                        Cancelar
+                    </SimpleButton>
+                </div>
+
+            </dialog>
+            <div className="max-w-md px-4 sm:px-7 md:max-w-4xl md:px-6">
                 <div className="md:grid md:grid-cols-2 md:divide-x md:divide-gray-200">
                     <div className="md:pr-14">
                         <div className="flex items-center">
@@ -97,7 +105,7 @@ export default function Calendar({ schedule = [] }: props) {
                                 onClick={previousMonth}
                                 className="-my-1.5 flex flex-none items-center justify-center p-1.5 text-gray-400 hover:text-gray-500"
                             >
-                                <span className="sr-only">Previous month</span>
+                                <span className="sr-only">Mês Anterior</span>
                                 <ChevronLeftIcon className="w-5 h-5" aria-hidden="true" />
                             </button>
                             <button
@@ -105,7 +113,7 @@ export default function Calendar({ schedule = [] }: props) {
                                 type="button"
                                 className="-my-1.5 -mr-1.5 ml-2 flex flex-none items-center justify-center p-1.5 text-gray-400 hover:text-gray-500"
                             >
-                                <span className="sr-only">Next month</span>
+                                <span className="sr-only">Próximo Mês</span>
                                 <ChevronRightIcon className="w-5 h-5" aria-hidden="true" />
                             </button>
                         </div>
@@ -195,15 +203,31 @@ export default function Calendar({ schedule = [] }: props) {
                                             {format(selectedDayRounds[0]?.last_day ?? selectedDayRounds[0].first_day, 'dd/MM/yyyy')}
                                         </time>
                                     </p>
-                                    {selectedDayRounds.map((round: any) => (
-                                        <Round key={round.id} round={round} />
+                                    <div className='flex justify-end border-b'>
+                                        {edit ?
+                                            <SimpleButton onClick={() => setEdit(false)} typeBtn='secondary' className='mb-2'>
+                                                <div className='flex flex-row gap-2 justify-between items-center'><ArrowDownCircleIcon className='w-5 h-5' /> Fechar edição</div>
+                                            </SimpleButton>
+                                            : <div className='flex flex-row gap-2'>
+                                                <SimpleButton onClick={() => setEdit(true)} typeBtn='secondary' className='border-none mb-2'>Editar</SimpleButton>
+                                            </div>
+                                        }
+                                    </div>
+                                    {selectedDayRounds.sort((a, b) => a.territory_id - b.territory_id).map((round: any) => (
+                                        <Round key={round.id} round={round} edit={edit} />
                                     ))}
                                 </>
 
                             ) : (
                                 <>
-                                    {isMonday(selectedDay) || isTuesday(selectedDay) ? <>Não é possível agendar em dias que o campo é somente pelo ZOOM.</> : <><p>Nenhum território agendado para este dia.</p>
-                                        <button className='px-2.5 py-1.5 text-blue-500 border border-blue-500 rounded-md hover:bg-blue-500 hover:text-white transition-all hover:font-semibold'>Agendar</button></>
+                                    {isMonday(selectedDay) || isTuesday(selectedDay) ? <>
+                                        Não é possível agendar em dias que o campo é somente pelo ZOOM.</> :
+                                        <div className='flex flex-col gap-2'>
+                                            <p>Nenhum território agendado para este dia.</p>
+                                            <SimpleButton onClick={() => setOpenModal(true)} typeBtn='primary'>
+                                                Agendar
+                                            </SimpleButton>
+                                        </div>
                                     }
 
                                 </>
@@ -212,18 +236,32 @@ export default function Calendar({ schedule = [] }: props) {
                     </section>
                 </div>
             </div>
+
         </div>
     )
 }
 
-function Round({ round }: { round: RoundsDto }) {
+
+function Round({ round, edit }: { round: RoundsDto, edit: boolean }) {
+    const [isLoadingMarkAsDone, setIsLoadingMarkAsDone] = useState<boolean>(false);
+    const router = useRouter()
+    let showQuestionIfWorked = false
+
+    async function ChangeStatusRound(round: RoundsDto, status: number) {
+        setIsLoadingMarkAsDone(true)
+        await MarkRoundAsDone(round, status).then(result => {
+            if (result) router.refresh()
+        }).finally(() => {
+            setIsLoadingMarkAsDone(false)
+        })
+
+    }
 
     let icon = <></>
 
     if (round.status == EStatus_territory[2]) {
-
-
         if (isBefore(round.expected_return, startOfToday())) {
+            showQuestionIfWorked = true
             icon = <ExclamationTriangleIcon className={`w-4 h-4  text-white p-0.5 rounded-full bg-orange-500 animate-bounce`} />
         } else {
             icon = <BriefcaseIcon className={`w-4 h-4 text-white p-0.5 rounded-full bg-red-500`} />
@@ -234,18 +272,37 @@ function Round({ round }: { round: RoundsDto }) {
 
 
     return (
-        <li className="flex items-center px-2 shadow py-2 transition-all hover:scale-105  space-x-4 group rounded-xl  focus-within:bg-gray-100 hover:bg-gray-100 ">
-            <div className="flex flex-row gap-2 flex-1 pl-4">
-                <img className="w-32   items-center flex-none rounded-md  bg-gray-50" src={`${round.territory_id}.png`} alt="" />
+        <li className="flex py-2.5 pr-2 transition-all  ">
+            <div className="flex flex-row gap-2 flex-1 pl-4 ">
+                <img className="w-36   h-max items-center flex-none rounded-md  bg-gray-50 " src={`${round.territory_id}.png`} alt="" />
                 <div className='flex flex-col flex-1 '>
-
                     <div className='flex gap-2 justify-between '>
                         <div className=" truncate text-md font-bold leading-5 text-gray-500 flex items-center  justify-start gap-2">{round.territory_id}</div>
-                        <div>
+                        <div className='flex flex-row gap-2 rounded-full items-center'>
+                            {!edit && round.status}
                             {icon}
                         </div>
                     </div>
-                    <div className="mb-2 truncate text-xs leading-5 text-gray-500 flex items-center  justify-start gap-2">{round.status}</div>
+                    {/*  <div className="mb-2 truncate text-xs leading-5 text-gray-500 flex items-center  justify-start gap-2">{round.status}</div> */}
+                    {
+                        (showQuestionIfWorked || edit &&  round.status == EStatus_territory[2])
+                        && <div className='flex flex-col '>
+                            <b className='text-xs py-2'>Foi Trabalhado?</b>
+                            <div className='flex flex-row'>
+                                <SimpleButton typeBtn='success_secondary' loading={{ isLoading: isLoadingMarkAsDone, message: "Finalizando..." }} onClick={() => ChangeStatusRound(round, 1)} className='border-none'>Sim</SimpleButton>
+                                {!isLoadingMarkAsDone && <SimpleButton typeBtn='danger_secondary' onClick={() => ChangeStatusRound(round, 3)} className='border-none'>Não</SimpleButton>}
+                            </div>
+                        </div>
+                    }
+                    {
+                        (edit && round.status != EStatus_territory[2])
+                        && <div className='flex flex-col '>
+                            <b className='text-xs py-2'>Alterar para em uso?</b>
+                            <div className='flex flex-row'>
+                                <SimpleButton typeBtn='success_secondary' loading={{ isLoading: isLoadingMarkAsDone, message: "Alterando para uso..." }} onClick={() => ChangeStatusRound(round, 2)} className='border-none'>Sim</SimpleButton>
+                            </div>
+                        </div>
+                    }
 
                 </div>
             </div>
