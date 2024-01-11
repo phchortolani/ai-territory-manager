@@ -39,6 +39,11 @@ type props = {
     schedule: RoundsDto[]
 }
 
+interface IListRoundsByLeaders {
+    leader: string,
+    rounds: RoundsDto[]
+}
+
 export default function Calendar({ schedule = [] }: props) {
     let today = startOfToday();
     const [modalOpen, setOpenModal] = useState<boolean>(false)
@@ -81,6 +86,27 @@ export default function Calendar({ schedule = [] }: props) {
         else if (isDone.length == round.length) return <CheckCircleIcon className={`w-5 h-5 text-white rounded-full bg-green-500`} />
         else return <CheckCircleIcon className={`w-5 h-5 text-white rounded-full bg-blue-500`} />
     }
+
+
+    function generateListOfRoundsByLeader(selectedRoundsofDay: RoundsDto[]) {
+        const leaders: string[] = []
+        const rounds_by_leaders: { leader: string, rounds: RoundsDto[] }[] = []
+
+        selectedRoundsofDay.forEach(x => {
+            if (!leaders.some(registro => registro == x.leader)) leaders.push(x.leader);
+        })
+
+        leaders.forEach(leader => {
+            const roundsofleader = selectedDayRounds.filter(x => x.leader === leader)
+            if (!rounds_by_leaders.some(x => x.leader == leader)) rounds_by_leaders.push({ leader, rounds: roundsofleader.sort((a, b) => a.territory_id - b.territory_id) })
+        })
+
+        return rounds_by_leaders
+    }
+
+    const rounds_by_leaders = generateListOfRoundsByLeader(selectedDayRounds)
+
+
 
 
     return (
@@ -188,35 +214,36 @@ export default function Calendar({ schedule = [] }: props) {
                             <time dateTime={format(selectedDay, 'dd-MM-yyyy', { locale: ptBR })}>
                                 {format(selectedDay, 'dd/MM/yyyy', { locale: ptBR })}
                             </time>
+                            {rounds_by_leaders[0]?.rounds[0]?.campaign && <div className='text-sm text-gray-400'>{rounds_by_leaders[0].rounds[0].campaign}</div>}
                         </h2>
                         <ol className="mt-4 space-y-1 text-sm leading-6 text-gray-500">
+                            <div className='flex justify-end border-b'>
+                                {edit ?
+                                    <SimpleButton onClick={() => setEdit(false)} typeBtn='secondary' className='mb-2'>
+                                        <div className='flex flex-row gap-2 justify-between items-center'><ArrowDownCircleIcon className='w-5 h-5' /> Fechar edição</div>
+                                    </SimpleButton>
+                                    : <div className='flex flex-row gap-2'>
+                                        <SimpleButton onClick={() => setEdit(true)} typeBtn='secondary' className='border-none mb-2'>Editar</SimpleButton>
+                                    </div>
+                                }
+                            </div>
 
-                            {selectedDayRounds.length > 0 ? (
-                                <>
-                                    <p className="text-gray-900 font-semibold capitalize">{selectedDayRounds[0].leader.toLocaleLowerCase()}</p>
+                            {rounds_by_leaders.length > 0 ? rounds_by_leaders.map(x =>
+                                <div key={x.leader} className='border-b  p-2 '>
+                                    <p className="text-gray-900 font-semibold capitalize">{x.leader.toLocaleLowerCase()}</p>
                                     <p className="mt-0.5">
-                                        <time dateTime={selectedDayRounds[0].first_day.toString()}>
-                                            {format(selectedDayRounds[0].first_day, 'dd/MM/yyyy')}
+                                        <time dateTime={x.rounds[0].first_day.toString()}>
+                                            {format(x.rounds[0].first_day, 'dd/MM/yyyy')}
                                         </time>{' '}
                                         -{' '}
-                                        <time dateTime={selectedDayRounds[0].last_day?.toString() ?? selectedDayRounds[0].first_day.toString()}>
-                                            {format(selectedDayRounds[0]?.last_day ?? selectedDayRounds[0].first_day, 'dd/MM/yyyy')}
+                                        <time dateTime={x.rounds[0].last_day?.toString() ?? x.rounds[0].first_day.toString()}>
+                                            {format(x.rounds[0]?.last_day ?? x.rounds[0].first_day, 'dd/MM/yyyy')}
                                         </time>
                                     </p>
-                                    <div className='flex justify-end border-b'>
-                                        {edit ?
-                                            <SimpleButton onClick={() => setEdit(false)} typeBtn='secondary' className='mb-2'>
-                                                <div className='flex flex-row gap-2 justify-between items-center'><ArrowDownCircleIcon className='w-5 h-5' /> Fechar edição</div>
-                                            </SimpleButton>
-                                            : <div className='flex flex-row gap-2'>
-                                                <SimpleButton onClick={() => setEdit(true)} typeBtn='secondary' className='border-none mb-2'>Editar</SimpleButton>
-                                            </div>
-                                        }
-                                    </div>
-                                    {selectedDayRounds.sort((a, b) => a.territory_id - b.territory_id).map((round: any) => (
+                                    {x.rounds.map((round: any) => (
                                         <Round key={round.id} round={round} edit={edit} />
                                     ))}
-                                </>
+                                </div>
 
                             ) : (
                                 <>
@@ -285,7 +312,7 @@ function Round({ round, edit }: { round: RoundsDto, edit: boolean }) {
                     </div>
                     {/*  <div className="mb-2 truncate text-xs leading-5 text-gray-500 flex items-center  justify-start gap-2">{round.status}</div> */}
                     {
-                        (showQuestionIfWorked || edit &&  round.status == EStatus_territory[2])
+                        (showQuestionIfWorked || edit && round.status == EStatus_territory[2])
                         && <div className='flex flex-col '>
                             <b className='text-xs py-2'>Foi Trabalhado?</b>
                             <div className='flex flex-row'>
