@@ -27,6 +27,7 @@ export default function Navbar({ children }: { children: React.ReactNode }) {
             { name: 'Calendário', href: 'schedule', current: true },
             /*    { name: 'Saídas', href: 'saida', current: false }, */
             { name: 'Territórios', href: 'territories', current: false },
+            { name: 'Download', href: 'downloads', current: false },
             /*  { name: 'Dirigentes', href: 'dirigentes', current: false }, */
         ])
 
