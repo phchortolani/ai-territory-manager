@@ -9,11 +9,16 @@ export default async function DownloadPage() {
 
 
         <div className="relative overflow-x-auto  sm:rounded-lg">
-            <table className="w-full text-sm text-left rtl:text-right  text-gray-500 dark:text-gray-400">
-                <caption className="pb-2 text-lg font-semibold text-left rtl:text-right  bg-white  text-gray-900">
+            <div className="pb-2 text-sm  justify-between items-center font-semibold text-left flex rtl:text-right  bg-white  text-gray-900">
 
-                    <SimpleButton typeBtn="primary">Download S13</SimpleButton>
-                </caption>
+                <SimpleButton typeBtn="primary">Download S13</SimpleButton>
+
+                <div className="text-sm text-gray-400">
+                    Atualizado em: {moment().format("DD/MM/YYYY HH:mm")}
+                </div>
+
+            </div>
+            <table className="w-full text-sm text-left rtl:text-right  text-gray-500 dark:text-gray-400">
                 <thead className="text-xs border bg-gray-50  text-gray-900">
                     <tr>
                         <th scope="col" className="px-2 py-3 border">
@@ -61,20 +66,20 @@ export default async function DownloadPage() {
                                 </th>
 
                                 <td rowSpan={2} colSpan={1} className="px-2 p-1 border font-bold text-sm text-center">
-                                    {moment(x.ultima_concluida).utc().format('DD/MM/YYYY')}
+                                    {x.designado_1 && moment(x.ultima_concluida).utc().format('DD/MM/YYYY') || "-"}
                                 </td>
                                 <td colSpan={2} className="px-2 font-semibold p-1 border text-sm text-center ">
-                                    {x.designado_1}
+                                    {x.designado_1 || "-"}
                                 </td>
                                 <td colSpan={2} className="px-2 p-1 font-semibold border text-sm text-center">
-                                    {x.designado_2}
+                                    {x.designado_2 || "-"}
                                 </td>
                                 <td colSpan={2} className="px-2 p-1 font-semibold border text-sm text-center">
-                                    {x.designado_3}
+                                    {x.designado_3 || "-"}
                                 </td>
 
                                 <td colSpan={2} className="px-2 p-1 font-semibold border text-sm text-center">
-                                    {x.designado_4}
+                                    {x.designado_4 || "-"}
                                 </td>
 
 
@@ -83,28 +88,28 @@ export default async function DownloadPage() {
 
 
                                 <td className="px-2 p-1 border text-sm text-center">
-                                    {x.first_day_designado_em_1 && moment(x.first_day_designado_em_1).utc().format('DD/MM/YYYY')}
+                                    {x.first_day_designado_em_1 && moment(x.first_day_designado_em_1).utc().format('DD/MM/YYYY') || "-"}
                                 </td>
                                 <td className="px-2 p-1 border text-sm text-center">
-                                    {x.last_day_designado_em_1 && moment(x.last_day_designado_em_1).utc().format('DD/MM/YYYY')}
+                                    {x.last_day_designado_em_1 && moment(x.last_day_designado_em_1).utc().format('DD/MM/YYYY') || "-"}
                                 </td>
                                 <td className="px-2 p-1 border text-sm text-center">
-                                    {x.first_day_designado_em_2 && moment(x.first_day_designado_em_2).utc().format('DD/MM/YYYY')}
+                                    {x.first_day_designado_em_2 && moment(x.first_day_designado_em_2).utc().format('DD/MM/YYYY') || "-"}
                                 </td>
                                 <td className="px-2 p-1 border text-sm text-center">
-                                    {x.last_day_designado_em_2 && moment(x.last_day_designado_em_2).utc().format('DD/MM/YYYY')}
+                                    {x.last_day_designado_em_2 && moment(x.last_day_designado_em_2).utc().format('DD/MM/YYYY') || "-"}
                                 </td>
                                 <td className="px-2 p-1 border text-sm text-center">
-                                    {x.first_day_designado_em_3 && moment(x.first_day_designado_em_3).utc().format('DD/MM/YYYY')}
+                                    {x.first_day_designado_em_3 && moment(x.first_day_designado_em_3).utc().format('DD/MM/YYYY') || "-"}
                                 </td>
                                 <td className="px-2 p-1 border text-sm text-center">
-                                    {x.last_day_designado_em_3 && moment(x.last_day_designado_em_3).utc().format('DD/MM/YYYY')}
+                                    {x.last_day_designado_em_3 && moment(x.last_day_designado_em_3).utc().format('DD/MM/YYYY') || "-"}
                                 </td>
                                 <td className="px-2 p-1 border text-sm text-center">
-                                    {x.first_day_designado_em_4 && moment(x.first_day_designado_em_4).utc().format('DD/MM/YYYY')}
+                                    {x.first_day_designado_em_4 && moment(x.first_day_designado_em_4).utc().format('DD/MM/YYYY') || "-"}
                                 </td>
                                 <td className="px-2 p-1 border text-sm text-center">
-                                    {x.last_day_designado_em_4 && moment(x.last_day_designado_em_4).utc().format('DD/MM/YYYY')}
+                                    {x.last_day_designado_em_4 && moment(x.last_day_designado_em_4).utc().format('DD/MM/YYYY') || "-"}
                                 </td>
                             </tr>
                         </>
