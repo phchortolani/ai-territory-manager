@@ -20,10 +20,10 @@ export function SearchTerritories({ territories, andressList }: TupleTerritoryAn
             <MagnifyingGlassIcon className="h-4 w-4 " />
             <input type="text" onChange={(x) => { Search(x.target.value) }} className="w-full px-2 outline-none placeholder:text-gray-400" maxLength={120} placeholder="Pesquisar" />
         </div>
-        <div className="mb-2 truncate text-xs leading-5 text-gray-500 flex items-center justify-end gap-2">
+        <div className="mb-2 truncate text-xs px-2 leading-5 text-gray-500 flex items-center justify-end gap-2">
             <div className="flex flow-row gap-2 items-center justify-center"><div>Total de Casas: </div> <div><b>{totalHouseNumbers}</b></div></div>
         </div>
-        <ul role="list" >
+        <ul role="list" className="px-2">
             {
                 territories?.map((territory) => (
                     <li key={territory.id} className="flex justify-between gap-x-6 gap-2 py-5 px-2 border rounded-md shadow mb-2">
