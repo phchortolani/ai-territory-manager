@@ -68,35 +68,35 @@ export function S13TableComponent({ s13_list }: { s13_list: S13[] }) {
                     {
                         s13_list.map(x => {
 
-                            return <React.Fragment key={x.id}>
-                                <tr key={x.id + "designado"} className="bg-white  text-gray-900 dark:border-gray-700">
+                            return <React.Fragment key={x.id + "designado"} >
+                                <tr className="bg-white  text-gray-900 dark:border-gray-700">
                                     <th rowSpan={2} scope="row" className="px-2 p-1 border text-sm text-center font-semibold text-gray-900 whitespace-nowrap ">
                                         {x.id}
                                     </th>
                                     {
                                         x.rounds.map((rodada, index) => {
-                                            if (index == 0) return <td rowSpan={2} colSpan={1} className="px-2 p-1 border  text-sm text-center">
+                                            if (index == 0) return <td key={x.id + rodada.id + index} rowSpan={2} colSpan={1} className="px-2 p-1 border  text-sm text-center">
                                                 {rodada.last_day && moment(rodada.last_day).utc().format('DD/MM/YYYY')}
                                             </td>
 
-                                            return <td colSpan={2} className="px-2 font-semibold p-1 border text-sm text-center ">
+                                            return <td key={x.id + rodada.id + index} colSpan={2} className="px-2 font-semibold p-1 border text-sm text-center ">
                                                 {rodada.leader_name}
                                             </td>
                                         })
                                     }
                                 </tr>
-                                <tr key={x.id} className="bg-white  text-gray-900  dark:border-gray-700">
+                                <tr className="bg-white  text-gray-900  dark:border-gray-700">
                                     {
                                         x.rounds.map((rodada, index) => {
                                             if (index == 0) return
-                                            return <>
+                                            return <React.Fragment key={x.id + rodada.id}>
                                                 <td className="px-2 p-1 border text-sm text-center">
                                                     {rodada.first_day && moment(rodada.first_day).utc().format('DD/MM/YYYY')}
                                                 </td>
                                                 <td className="px-2 p-1 border text-sm text-center">
                                                     {rodada.last_day && moment(rodada.last_day).utc().format('DD/MM/YYYY')}
                                                 </td>
-                                            </>
+                                            </React.Fragment>
                                         })
                                     }
                                 </tr>
