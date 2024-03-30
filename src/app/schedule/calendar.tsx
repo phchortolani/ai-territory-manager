@@ -111,14 +111,33 @@ export default function Calendar({ schedule = [] }: props) {
 
     return (
         <div>
-            <dialog className='w-screen h-screen fixed z-50 bg-gray-400/30 top-0 overflow-hidden ' open={modalOpen}>
-                <div className='h-[calc(100%-2rem)] mx-1 md:mx-8 my-2  flex justify-center items-center bg-white rounded-md shadow-lg'>
-                    <SimpleButton typeBtn='secondary' onClick={() => setOpenModal(false)}>
-                        Cancelar
-                    </SimpleButton>
-                </div>
+            <dialog className='w-screen h-screen fixed z-50 bg-gray-400/30 top-0 overflow-hidden' open={modalOpen}>
+                <div className='md:h-[calc(100%-2rem)] h-full md:mx-8 md:my-2 absolute w-full md:w-[calc(100%-4rem)] p-4 bg-white rounded-md shadow-lg'>
+                    <div className='flex justify-between'>
+                        <div className='text-lg'>
+                            Agendamento
+                        </div>
+                        <div>
+                            <div onClick={() => setOpenModal(false)} className='cursor-pointer hover:invert'>
+                                ❌
+                            </div>
+                        </div>
+                    </div>
+                    <hr className='my-4'></hr>
+                    <div className='md:h-[calc(100%-2rem)] h-full '>
+                        <div className='flex flex-col gap-2'>
+                            <div className='flex flex-col gap-2'>
+                                <label htmlFor='leader'>Dirigente</label>
+                                <select id='leader' className='border rounded-md p-2 focus:border-blue-400 outline-blue-400'>
+                                    <option>Opcao 1</option>
+                                    <option>Opcao 2</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
 
-            </dialog>
+                </div>
+            </dialog >
             <div className="max-w-md px-4 sm:px-7 md:max-w-4xl md:px-6">
                 <div className="md:grid md:grid-cols-2 md:divide-x md:divide-gray-200">
                     <div className="md:pr-14">
@@ -267,7 +286,7 @@ export default function Calendar({ schedule = [] }: props) {
                 </div>
             </div>
 
-        </div>
+        </div >
     )
 }
 

@@ -29,7 +29,7 @@ export function S13TableComponent({ s13_list }: { s13_list: S13[] }) {
                 </div>
             }
 
-            <table ref={tableRef} className="w-full text-sm text-left rtl:text-right  text-gray-500 dark:text-gray-400">
+            <table ref={tableRef} className="w-full text-sm text-left rtl:text-right  text-gray-500 border dark:text-gray-400">
                 <thead className="text-xs border bg-gray-50  text-gray-900">
                     <tr>
                         <th scope="col" className="px-2 py-3 border">
@@ -65,66 +65,44 @@ export function S13TableComponent({ s13_list }: { s13_list: S13[] }) {
                     </tr>
                 </thead>
                 <tbody>
+                    {
+                        s13_list.map(x => {
 
+                            return <React.Fragment key={x.id}>
+                                <tr key={x.id + "designado"} className="bg-white  text-gray-900 dark:border-gray-700">
+                                    <th rowSpan={2} scope="row" className="px-2 p-1 border text-sm text-center font-semibold text-gray-900 whitespace-nowrap ">
+                                        {x.id}
+                                    </th>
+                                    {
+                                        x.rounds.map((rodada, index) => {
+                                            if (index == 0) return <td rowSpan={2} colSpan={1} className="px-2 p-1 border  text-sm text-center">
+                                                {rodada.last_day && moment(rodada.last_day).utc().format('DD/MM/YYYY')}
+                                            </td>
 
-
-
-                    {s13_list.sort().map(x => {
-                        return <React.Fragment key={x.id}>
-                            <tr key={x.id + "designado"} className="bg-white border-b text-gray-900 dark:border-gray-700">
-                                <th rowSpan={2} scope="row" className="px-2 p-1 border  text-sm text-center font-medium text-gray-900 whitespace-nowrap ">
-                                    {x.id}
-                                </th>
-
-                                <td rowSpan={2} colSpan={1} className="px-2 p-1 border font-bold text-sm text-center">
-                                    {x.designado_1 && moment(x.ultima_concluida).utc().format('DD/MM/YYYY') || "-"}
-                                </td>
-                                <td colSpan={2} className="px-2 font-semibold p-1 border text-sm text-center ">
-                                    {x.designado_1 || "-"}
-                                </td>
-                                <td colSpan={2} className="px-2 p-1 font-semibold border text-sm text-center">
-                                    {x.designado_2 || "-"}
-                                </td>
-                                <td colSpan={2} className="px-2 p-1 font-semibold border text-sm text-center">
-                                    {x.designado_3 || "-"}
-                                </td>
-
-                                <td colSpan={2} className="px-2 p-1 font-semibold border text-sm text-center">
-                                    {x.designado_4 || "-"}
-                                </td>
-
-
-                            </tr>
-                            <tr key={x.id} className="bg-white border-b text-gray-900  dark:border-gray-700">
-
-
-                                <td className="px-2 p-1 border text-sm text-center">
-                                    {x.first_day_designado_em_1 && moment(x.first_day_designado_em_1).utc().format('DD/MM/YYYY') || "-"}
-                                </td>
-                                <td className="px-2 p-1 border text-sm text-center">
-                                    {x.last_day_designado_em_1 && moment(x.last_day_designado_em_1).utc().format('DD/MM/YYYY') || "-"}
-                                </td>
-                                <td className="px-2 p-1 border text-sm text-center">
-                                    {x.first_day_designado_em_2 && moment(x.first_day_designado_em_2).utc().format('DD/MM/YYYY') || "-"}
-                                </td>
-                                <td className="px-2 p-1 border text-sm text-center">
-                                    {x.last_day_designado_em_2 && moment(x.last_day_designado_em_2).utc().format('DD/MM/YYYY') || "-"}
-                                </td>
-                                <td className="px-2 p-1 border text-sm text-center">
-                                    {x.first_day_designado_em_3 && moment(x.first_day_designado_em_3).utc().format('DD/MM/YYYY') || "-"}
-                                </td>
-                                <td className="px-2 p-1 border text-sm text-center">
-                                    {x.last_day_designado_em_3 && moment(x.last_day_designado_em_3).utc().format('DD/MM/YYYY') || "-"}
-                                </td>
-                                <td className="px-2 p-1 border text-sm text-center">
-                                    {x.first_day_designado_em_4 && moment(x.first_day_designado_em_4).utc().format('DD/MM/YYYY') || "-"}
-                                </td>
-                                <td className="px-2 p-1 border text-sm text-center">
-                                    {x.last_day_designado_em_4 && moment(x.last_day_designado_em_4).utc().format('DD/MM/YYYY') || "-"}
-                                </td>
-                            </tr>
-                        </React.Fragment>
-                    })}
+                                            return <td colSpan={2} className="px-2 font-semibold p-1 border text-sm text-center ">
+                                                {rodada.leader_name}
+                                            </td>
+                                        })
+                                    }
+                                </tr>
+                                <tr key={x.id} className="bg-white  text-gray-900  dark:border-gray-700">
+                                    {
+                                        x.rounds.map((rodada, index) => {
+                                            if (index == 0) return
+                                            return <>
+                                                <td className="px-2 p-1 border text-sm text-center">
+                                                    {rodada.first_day && moment(rodada.first_day).utc().format('DD/MM/YYYY')}
+                                                </td>
+                                                <td className="px-2 p-1 border text-sm text-center">
+                                                    {rodada.last_day && moment(rodada.last_day).utc().format('DD/MM/YYYY')}
+                                                </td>
+                                            </>
+                                        })
+                                    }
+                                </tr>
+                            </React.Fragment>
+                        })
+                    }
 
 
                 </tbody>
