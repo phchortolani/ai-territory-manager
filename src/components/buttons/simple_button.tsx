@@ -3,6 +3,7 @@ import { twMerge } from 'tailwind-merge'
 
 interface iProps extends HTMLAttributes<HTMLButtonElement> {
     typeBtn: 'primary' | 'secondary' | 'success_primary' | 'success_secondary' | 'danger' | 'danger_secondary',
+    type?: "submit" | "reset" | "button" | undefined,
     children: React.ReactNode,
     loading?: {
         isLoading: boolean,
@@ -19,7 +20,7 @@ export function SimpleButton({ typeBtn, children, className, loading, ...rest }:
         danger: 'text-white border-red-500 bg-red-500 hover:text-red-500 hover:bg-red-200 transition-all hover:font-semibold',
         danger_secondary: 'text-red-500 border-red-500 hover:bg-red-500 hover:text-white transition-all hover:font-semibold'
     }
-    return <button {...rest} disabled={loading?.isLoading} className={twMerge('px-2.5 py-1.5 border rounded-md w-max', type[typeBtn], className)}>
+    return <button {...rest} type={rest.type} disabled={loading?.isLoading} className={twMerge('px-2.5 py-1.5 border rounded-md w-max', type[typeBtn], className)}>
         {loading?.isLoading ? <div className='flex flex-col gap-2'>
             {loading.message}
         </div> :

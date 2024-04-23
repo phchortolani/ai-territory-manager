@@ -19,14 +19,20 @@ import {
     startOfToday,
     startOfWeek
 } from 'date-fns'
-import { useState } from 'react'
-
+import { useEffect, useState } from 'react'
+import { useForm, SubmitHandler } from "react-hook-form"
 import { ptBR } from 'date-fns/locale'
 import { RoundsDto } from '@/dtos/roundsDto'
 import { EStatus_territory } from '@/enums/status_territory'
 import { SimpleButton } from '@/components/buttons/simple_button'
-import { MarkRoundAsDone } from '@/services/roundsService'
+import { MarkRoundAsDone, Schedule } from '@/services/roundsService'
 import { useRouter } from 'next/navigation'
+import { getLeaders } from '@/services/scheduleService'
+import { Leaders } from '@/models/leaders'
+import { z } from "zod"
+import { zodResolver } from '@hookform/resolvers/zod'
+import { ISchedule } from '@/dtos/schedule'
+import { Router } from 'next/router'
 
 
 
@@ -39,14 +45,17 @@ type props = {
     schedule: RoundsDto[]
 }
 
-interface IListRoundsByLeaders {
-    leader: string,
-    rounds: RoundsDto[]
-}
+
+const schema = z.object({
+    leader_id: z.string().optional(),
+    repeat_next_week: z.boolean().optional()
+}).required()
 
 export default function Calendar({ schedule = [] }: props) {
     let today = startOfToday();
+    const router = useRouter()
     const [modalOpen, setOpenModal] = useState<boolean>(false)
+    const [leaders, setLeaders] = useState<Leaders[]>()
     const [selectedDay, setSelectedDay] = useState(today)
     const [currentMonth, setCurrentMonth] = useState(format(today, 'MMM-yyyy'))
     const [edit, setEdit] = useState<boolean>(false)
@@ -106,14 +115,31 @@ export default function Calendar({ schedule = [] }: props) {
 
     const rounds_by_leaders = generateListOfRoundsByLeader(selectedDayRounds)
 
+    async function OpenSchedule() {
+        const leaders = await getLeaders()
 
+        if (leaders) {
+            setLeaders(leaders)
+            setOpenModal(true)
+        }
 
+    }
+
+    const { register, handleSubmit, formState: { errors }, } = useForm<ISchedule>({ resolver: zodResolver(schema) })
+
+    async function submit(schedule: ISchedule) {
+        await Schedule({ ...schedule, first_day: selectedDay })
+            .then(response => {
+                setOpenModal(false)
+                router.refresh()
+            })
+    }
 
     return (
         <div>
             <dialog className='w-screen h-screen fixed z-50 bg-gray-400/30 top-0 overflow-hidden' open={modalOpen}>
-                <div className='md:h-[calc(100%-2rem)] h-full md:mx-8 md:my-2 absolute w-full md:w-[calc(100%-4rem)] p-4 bg-white rounded-md shadow-lg'>
-                    <div className='flex justify-between'>
+                <div className='md:h-[calc(100%-2rem)] flex  h-full md:mx-8 md:my-2 absolute w-full md:w-[calc(100%-4rem)] p-4 bg-white rounded-md shadow-lg flex-col gap-2 justify-between'>
+                    <div className='flex flex-row w-full justify-between'>
                         <div className='text-lg'>
                             Agendamento
                         </div>
@@ -123,18 +149,40 @@ export default function Calendar({ schedule = [] }: props) {
                             </div>
                         </div>
                     </div>
-                    <hr className='my-4'></hr>
-                    <div className='md:h-[calc(100%-2rem)] h-full '>
-                        <div className='flex flex-col gap-2'>
-                            <div className='flex flex-col gap-2'>
+                    <hr></hr>
+                    <form className='flex-1' action='post' method='POST' onSubmit={handleSubmit(submit)}>
+                        <div className='flex flex-col justify-between h-full gap-2'>
+                            <div className='flex flex-col flex-1 gap-2'>
                                 <label htmlFor='leader'>Dirigente</label>
-                                <select id='leader' className='border rounded-md p-2 focus:border-blue-400 outline-blue-400'>
-                                    <option>Opcao 1</option>
-                                    <option>Opcao 2</option>
+                                <select
+                                    {...register('leader_id')}
+                                    name='leader_id'
+                                    className='border rounded-md p-2 focus:border-blue-400 outline-blue-400'>
+                                    {leaders?.map(x => <option key={x.id}>{x.id} - {x.name}</option>)}
                                 </select>
                             </div>
+                            <div className='mt-2 '>
+                                <div className='flex flex-row gap-2 items-center'>
+                                    <input type='checkbox'
+                                        {...register('repeat_next_week')}
+                                        name='repeat_next_week'
+                                        defaultChecked={true} />
+                                    <span>Repetir Semana</span>
+                                </div>
+
+                            </div>
+                            <hr></hr>
+                            <div>
+
+                                <SimpleButton type='submit' className='w-full md:w-auto' typeBtn='primary'>
+                                    Agendar
+                                </SimpleButton>
+                            </div>
                         </div>
-                    </div>
+
+                    </form>
+
+
 
                 </div>
             </dialog >
@@ -273,7 +321,7 @@ export default function Calendar({ schedule = [] }: props) {
                                         Não é possível agendar em dias que o campo é somente pelo ZOOM.</> :
                                         <div className='flex flex-col gap-2'>
                                             <p>Nenhum território agendado para este dia.</p>
-                                            <SimpleButton onClick={() => setOpenModal(true)} typeBtn='primary'>
+                                            <SimpleButton onClick={OpenSchedule} typeBtn='primary'>
                                                 Agendar
                                             </SimpleButton>
                                         </div>

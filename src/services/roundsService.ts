@@ -3,6 +3,7 @@ import { ApiServerFetch } from "./api";;
 import { EStatus_territory } from "@/enums/status_territory";
 import { ApiClient } from "./api_client";
 import { S13 } from "@/dtos/s13";
+import { ISchedule } from "@/dtos/schedule";
 
 const controller = 'rounds'
 
@@ -23,4 +24,10 @@ export async function getS13() {
     return await ApiServerFetch<S13[]>(controller + `/getS13`, {
         cache: 'no-cache'
     })
+}
+
+export async function Schedule(schedule: ISchedule) {
+    return await ApiClient().post<string>(`${controller}/schedule/${schedule.leader_id}`, schedule).then(result => {
+        return result.data
+    }).catch(x => console.log(x))
 }
