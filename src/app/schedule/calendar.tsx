@@ -158,7 +158,7 @@ export default function Calendar({ schedule = [] }: props) {
                                     {...register('leader_id')}
                                     name='leader_id'
                                     className='border rounded-md p-2 focus:border-blue-400 outline-blue-400'>
-                                    {leaders?.map(x => <option key={x.id}>{x.id} - {x.name}</option>)}
+                                    {leaders?.map(x => <option value={x.id} key={x.id}>{x.id} - {x.name}</option>)}
                                 </select>
                             </div>
                             <div className='mt-2 '>
