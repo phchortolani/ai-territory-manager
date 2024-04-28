@@ -55,10 +55,12 @@ export default function Calendar({ schedule = [] }: props) {
     let today = startOfToday();
     const router = useRouter()
     const [modalOpen, setOpenModal] = useState<boolean>(false)
+    const [loading, setLoading] = useState<boolean>(false)
     const [leaders, setLeaders] = useState<Leaders[]>()
     const [selectedDay, setSelectedDay] = useState(today)
     const [currentMonth, setCurrentMonth] = useState(format(today, 'MMM-yyyy'))
     const [edit, setEdit] = useState<boolean>(false)
+    const [msg, setMsg] = useState<string>("")
 
 
     let firstDayCurrentMonth = parse(currentMonth, 'MMM-yyyy', new Date())
@@ -128,11 +130,17 @@ export default function Calendar({ schedule = [] }: props) {
     const { register, handleSubmit, formState: { errors }, } = useForm<ISchedule>({ resolver: zodResolver(schema) })
 
     async function submit(schedule: ISchedule) {
+        setLoading(true)
         await Schedule({ ...schedule, first_day: selectedDay })
             .then(response => {
-                setOpenModal(false)
-                router.refresh()
-            })
+                if (response)
+                    setMsg(response)
+            }).finally(() => setLoading(false))
+    }
+
+    function CloseModal() {
+        setOpenModal(false)
+        router.refresh()
     }
 
     return (
@@ -144,7 +152,7 @@ export default function Calendar({ schedule = [] }: props) {
                             Agendamento
                         </div>
                         <div>
-                            <div onClick={() => setOpenModal(false)} className='cursor-pointer hover:invert'>
+                            <div onClick={CloseModal} className='cursor-pointer hover:invert'>
                                 ❌
                             </div>
                         </div>
@@ -160,7 +168,15 @@ export default function Calendar({ schedule = [] }: props) {
                                     className='border rounded-md p-2 focus:border-blue-400 outline-blue-400'>
                                     {leaders?.map(x => <option value={x.id} key={x.id}>{x.id} - {x.name}</option>)}
                                 </select>
+                                {msg && <div className='p-2 flex bg-slate-200 rounded-md shadow-sm font-mono gap-2 '><b>Agendamento:</b>
+                                    <p>
+                                        {msg}
+                                    </p>
+                                </div>}
+
+
                             </div>
+
                             <div className='mt-2 '>
                                 <div className='flex flex-row gap-2 items-center'>
                                     <input type='checkbox'
@@ -174,7 +190,7 @@ export default function Calendar({ schedule = [] }: props) {
                             <hr></hr>
                             <div>
 
-                                <SimpleButton type='submit' className='w-full md:w-auto' typeBtn='primary'>
+                                <SimpleButton type='submit' loading={{ isLoading: loading, message: 'Agendando' }} className='w-full md:w-auto' typeBtn='primary'>
                                     Agendar
                                 </SimpleButton>
                             </div>
