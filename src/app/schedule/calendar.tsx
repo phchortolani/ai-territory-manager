@@ -197,7 +197,7 @@ export default function Calendar({ schedule = [] }: props) {
                             <div>
 
                                 <SimpleButton type='submit' loading={{ isLoading: loading, message: 'Agendando' }} className='w-full md:w-auto' typeBtn='primary'>
-                                    Agendar
+                                    Gerar
                                 </SimpleButton>
                             </div>
                         </div>
