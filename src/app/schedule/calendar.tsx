@@ -21,7 +21,7 @@ import {
 } from 'date-fns'
 import { useEffect, useState } from 'react'
 import { useForm, SubmitHandler } from "react-hook-form"
-import { ptBR } from 'date-fns/locale'
+import { ms, ptBR } from 'date-fns/locale'
 import { RoundsDto } from '@/dtos/roundsDto'
 import { EStatus_territory } from '@/enums/status_territory'
 import { SimpleButton } from '@/components/buttons/simple_button'
@@ -143,6 +143,12 @@ export default function Calendar({ schedule = [] }: props) {
         router.refresh()
     }
 
+    useEffect(() => {
+        if (msg) {
+            navigator.clipboard.writeText(msg);
+        }
+    }, [msg])
+
     return (
         <div>
             <dialog className='w-screen h-screen fixed z-50 bg-gray-400/30 top-0 overflow-hidden' open={modalOpen}>
@@ -169,9 +175,9 @@ export default function Calendar({ schedule = [] }: props) {
                                     {leaders?.map(x => <option value={x.id} key={x.id}>{x.id} - {x.name}</option>)}
                                 </select>
                                 {msg && <div className='p-2 flex bg-slate-200 rounded-md shadow-sm font-mono gap-2 '><b>Agendamento:</b>
-                                    <p>
-                                        {msg}
-                                    </p>
+                                    <pre dangerouslySetInnerHTML={{ __html: msg }}>
+
+                                    </pre>
                                 </div>}
 
 
