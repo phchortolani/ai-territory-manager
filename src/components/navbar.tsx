@@ -28,7 +28,7 @@ export default function Navbar({ children }: { children: React.ReactNode }) {
             /*    { name: 'Saídas', href: 'saida', current: false }, */
             { name: 'Territórios', href: 'territories', current: false },
             { name: 'Download', href: 'downloads', current: false },
-            /*  { name: 'Dirigentes', href: 'dirigentes', current: false }, */
+             { name: 'Irmãos', href: 'brothers', current: false },
         ])
 
     useEffect(() => {
