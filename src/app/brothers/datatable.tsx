@@ -8,7 +8,6 @@ import {
     flexRender,
     getCoreRowModel,
     getFilteredRowModel,
-    getPaginationRowModel,
     getSortedRowModel,
     useReactTable,
 } from "@tanstack/react-table"
@@ -57,9 +56,9 @@ export function DataTable<TData, TValue>({
 
     return (
         <div className="flex flex-col gap-2" >
-            <div className="flex items-center justify-between">
+            <div className="flex md:items-center md:justify-between flex-col md:flex-row">
                 <div className="flex flex-col text-sm ">
-                    <ul className="flex md:flex-row gap-2  ">
+                    <ul className="flex md:flex-row gap-2  flex-col">
                         <li>Total de ativos:  <b> {info?.filter((x) => x.active).length}</b> </li>
                         <li>Total de inativos: <b>{info?.filter(x => !x.active).length}</b> </li>
                         <li>Total de TPL ativos: <b>{info?.filter(x => x.active_tpl).length}</b> </li>
@@ -72,7 +71,7 @@ export function DataTable<TData, TValue>({
                     onChange={(event) =>
                         table.getColumn("brother_name")?.setFilterValue(event.target.value)
                     }
-                    className="max-w-sm"
+                    className="max-w-lg mt-2 md:mt-0"
                 />
             </div>
 

@@ -6,13 +6,11 @@ import { Brother } from "@/models/brother"
 import { deleteBrother, updateBrother } from "@/services/brothersService"
 import { toast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
-import { QueryClient, useQueryClient } from "@tanstack/react-query"
+import { useQueryClient } from "@tanstack/react-query"
 import { TrashIcon } from "@heroicons/react/24/outline"
-import { effect } from "zod"
+
 import { useState } from "react"
 
-// This type is used to define the shape of our data.
-// You can use a Zod schema here if you want.
 
 type UpdateBrotherType = "active" | 'active_tpl'
 
@@ -132,7 +130,7 @@ export const columns: ColumnDef<Brother>[] = [
     {
         accessorKey: "id",
         header: () => <div className="text-center">Excluir</div>,
-        cell: function ActiveCell({ row }){
+        cell: function ActiveCell({ row }) {
             const queryClient = useQueryClient();
             const id = row.getValue<number>("id")
             const [isLoading, setIsLoading] = useState(false)
