@@ -86,7 +86,7 @@ export const columns: ColumnDef<Brother>[] = [
     {
         accessorKey: "active",
         header: () => <div className="text-center">Ativo</div>,
-        cell: ({ row }) => {
+        cell: function ActiveCell({ row }) {
             const queryClient = useQueryClient();
             const [isLoading, setIsLoading] = useState(false)
             const active = row.getValue<boolean>("active")
@@ -109,7 +109,7 @@ export const columns: ColumnDef<Brother>[] = [
     {
         accessorKey: "active_tpl",
         header: () => <div className="text-center">TPL Ativo</div>,
-        cell: ({ row }) => {
+        cell: function ActiveCell({ row }) {
             const queryClient = useQueryClient();
             const [isLoading, setIsLoading] = useState(false)
             const active = row.getValue<boolean>("active_tpl")
@@ -132,7 +132,7 @@ export const columns: ColumnDef<Brother>[] = [
     {
         accessorKey: "id",
         header: () => <div className="text-center">Excluir</div>,
-        cell: ({ row }) => {
+        cell: function ActiveCell({ row }){
             const queryClient = useQueryClient();
             const id = row.getValue<number>("id")
             const [isLoading, setIsLoading] = useState(false)
