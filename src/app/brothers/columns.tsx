@@ -91,7 +91,7 @@ export const columns: ColumnDef<Brother>[] = [
         size: 20,
         maxSize: 30,
         header: () => <div>Familia</div>,
-        cell: ({ row, table }) => {
+        cell: function ActiveCell({ row, table }) {
             const queryClient = useQueryClient();
             const [isLoading, setIsLoading] = useState(false)
             const allBrothers = table.getPreFilteredRowModel().rows.map(x => x.original)
@@ -111,7 +111,7 @@ export const columns: ColumnDef<Brother>[] = [
                 const brother_edited = row.original
 
                 brother_edited.families = families
-        
+
                 await UpdateBrother(brother_edited, "families", undefined, {
                     onUpdate: invalidateQueries,
                     onStart: () => setIsLoading(true),
