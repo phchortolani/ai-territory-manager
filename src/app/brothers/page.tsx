@@ -7,6 +7,7 @@ import { getBrothers } from "@/services/brothersService"
 import { useEffect, useState } from "react"
 import { BrotherModal } from "./modal"
 import { useQuery } from "@tanstack/react-query"
+import { TplModal } from "./modal_tpl"
 
 
 export default function BrothersPage() {
@@ -19,9 +20,7 @@ export default function BrothersPage() {
         <div className="container mx-auto px-1 md:p-0">
             <div className="flex flex-row gap-2">
                 <BrotherModal btn={{ name: "Adicionar" }} />
-                <Button className="mb-4 bg-green-500 hover:bg-green-700" >
-                    Gerar TPL
-                </Button>
+                <TplModal btn={{ name: "Gerar TPL" }} />
             </div>
             <DataTable columns={columns} data={data} />
         </div>
