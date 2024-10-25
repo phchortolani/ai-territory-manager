@@ -32,6 +32,7 @@ async function UpdateBrother(brother: Brother, type: UpdateBrotherType, value?: 
             break
     }
 
+
     await updateBrother(brother).then(result => {
         toast({
             title: "Alterado com sucesso!",
@@ -95,7 +96,7 @@ export const columns: ColumnDef<Brother>[] = [
             const queryClient = useQueryClient();
             const [isLoading, setIsLoading] = useState(false)
             const allBrothers = table.getPreFilteredRowModel().rows.map(x => x.original)
-
+            const id = row.getValue<number>("id")
             const options = allBrothers.map(x => { return { value: x.brother_name, label: x.brother_name } })
             const families: Brother[] = row.original.families
             const defaultOptions = families?.map(x => { return { value: x.brother_name, label: x.brother_name } })
@@ -122,7 +123,7 @@ export const columns: ColumnDef<Brother>[] = [
 
 
             return <div className="max-w-sm">
-                <Select2 isDisabled={isLoading} options={options} defaultValue={defaultOptions} onChange={onChange} />
+                <Select2 isDisabled={isLoading} options={options?.filter(x => x.value !== row.original.brother_name)} defaultValue={defaultOptions} onChange={onChange} />
             </div>
         },
     },

@@ -14,12 +14,10 @@ export async function getBrothers() {
 
 export async function updateBrother(brother: Brother) {
 
-    const response = await ApiClient()
+    return await ApiClient()
         .put<Brother>(`${controller}/${brother.id}`, brother).then(result => {
             return result.data
         })
-
-    return response
 
 }
 
