@@ -28,7 +28,7 @@ export default function Navbar({ children }: { children: React.ReactNode }) {
             /*    { name: 'Saídas', href: 'saida', current: false }, */
             { name: 'Territórios', href: 'territories', current: false },
             { name: 'Download', href: 'downloads', current: false },
-             { name: 'Irmãos', href: 'brothers', current: false },
+            { name: 'Irmãos', href: 'brothers', current: false },
         ])
 
     useEffect(() => {
@@ -79,7 +79,7 @@ export default function Navbar({ children }: { children: React.ReactNode }) {
                                     </div>
                                     <div className="hidden md:block">
                                         <div className="ml-4 flex items-center md:ml-6">
-                                       {/*      <button
+                                            {/*      <button
                                                 type="button"
                                                 className="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                                             >
@@ -167,7 +167,7 @@ export default function Navbar({ children }: { children: React.ReactNode }) {
                                         <div className="ml-3">
                                             <div className="text-base font-medium leading-none text-white">{user.name}</div>
                                         </div>
-                                {/*         <button
+                                        {/*         <button
                                             type="button"
                                             className="relative ml-auto flex-shrink-0 rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                                         >

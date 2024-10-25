@@ -17,7 +17,7 @@ export async function updateBrother(brother: Brother) {
     const response = await ApiClient()
         .put<Brother>(`${controller}/${brother.id}`, brother).then(result => {
             return result.data
-        }).catch(x => { })
+        })
 
     return response
 
@@ -27,7 +27,7 @@ export async function saveBrother(brother: Brother) {
     const response = await ApiClient()
         .post<Brother>(controller, brother).then(result => {
             return result.data
-        }).catch(x => { })
+        })
 
     return response;
 }
@@ -36,7 +36,7 @@ export async function deleteBrother(id: number) {
     await ApiClient()
         .delete<Brother>(`${controller}/${id}`).then(result => {
             return result.data
-        }).catch(x => { })
+        })
 
     return true
 }

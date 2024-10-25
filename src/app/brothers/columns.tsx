@@ -10,22 +10,25 @@ import { useQueryClient } from "@tanstack/react-query"
 import { TrashIcon } from "@heroicons/react/24/outline"
 
 import { useState } from "react"
+import { OptionType, Select2 } from "@/components/ui/select2"
+import { MultiValue } from "react-select"
 
 
-type UpdateBrotherType = "active" | 'active_tpl'
+type UpdateBrotherType = "active" | 'active_tpl' | 'families'
 
 
-async function UpdateBrother(value: boolean, brother: Brother, type: UpdateBrotherType, effect?: { onUpdate?: () => void, onStart?: () => void, onEnd?: () => void }) {
+async function UpdateBrother(brother: Brother, type: UpdateBrotherType, value?: boolean, effect?: { onUpdate?: () => void, onStart?: () => void, onEnd?: () => void }) {
     if (effect?.onStart) effect?.onStart()
+
     switch (type) {
         case "active":
-            brother.active = value
+            brother.active = (value ?? false)
             if (!value) {
                 brother.active_tpl = false
             }
             break
         case "active_tpl":
-            brother.active_tpl = (value && brother.active)
+            brother.active_tpl = ((value ?? false) && brother.active)
             break
     }
 
@@ -46,6 +49,8 @@ async function UpdateBrother(value: boolean, brother: Brother, type: UpdateBroth
         if (effect?.onEnd) effect?.onEnd()
     })
 }
+
+
 
 async function DeleteBrother(id: number, effect: { onDelete: () => void, onStart: () => void, onEnd: () => void }) {
     effect.onStart()
@@ -82,6 +87,46 @@ export const columns: ColumnDef<Brother>[] = [
         },
     },
     {
+        accessorKey: "family",
+        size: 20,
+        maxSize: 30,
+        header: () => <div>Familia</div>,
+        cell: ({ row, table }) => {
+            const queryClient = useQueryClient();
+            const [isLoading, setIsLoading] = useState(false)
+            const allBrothers = table.getPreFilteredRowModel().rows.map(x => x.original)
+
+            const options = allBrothers.map(x => { return { value: x.brother_name, label: x.brother_name } })
+            const families: Brother[] = row.original.families
+            const defaultOptions = families?.map(x => { return { value: x.brother_name, label: x.brother_name } })
+
+            async function invalidateQueries() {
+                queryClient.invalidateQueries({ queryKey: ["brothers"] })
+            }
+
+            async function onChange(value: MultiValue<OptionType>) {
+
+                const values = value.map(x => x.value)
+                const families = allBrothers.filter(x => values.includes(x.brother_name))
+                const brother_edited = row.original
+
+                brother_edited.families = families
+        
+                await UpdateBrother(brother_edited, "families", undefined, {
+                    onUpdate: invalidateQueries,
+                    onStart: () => setIsLoading(true),
+                    onEnd: () => setIsLoading(false)
+                })
+            }
+
+
+
+            return <div className="max-w-sm">
+                <Select2 isDisabled={isLoading} options={options} defaultValue={defaultOptions} onChange={onChange} />
+            </div>
+        },
+    },
+    {
         accessorKey: "active",
         header: () => <div className="text-center">Ativo</div>,
         cell: function ActiveCell({ row }) {
@@ -96,7 +141,7 @@ export const columns: ColumnDef<Brother>[] = [
                 <Checkbox
                     disabled={isLoading}
                     checked={row.original.active}
-                    onCheckedChange={(checked: boolean) => UpdateBrother(checked, row.original, "active", {
+                    onCheckedChange={(checked: boolean) => UpdateBrother(row.original, "active", checked, {
                         onUpdate: invalidateQueries,
                         onStart: () => setIsLoading(true),
                         onEnd: () => setIsLoading(false)
@@ -119,7 +164,7 @@ export const columns: ColumnDef<Brother>[] = [
                 <Checkbox
                     disabled={!row.original.active || isLoading}
                     checked={row.original.active_tpl && row.original.active}
-                    onCheckedChange={(checked: boolean) => UpdateBrother(checked, row.original, "active_tpl", {
+                    onCheckedChange={(checked: boolean) => UpdateBrother(row.original, "active_tpl", checked, {
                         onUpdate: invalidateQueries,
                         onStart: () => setIsLoading(true),
                         onEnd: () => setIsLoading(false)

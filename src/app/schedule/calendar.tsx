@@ -339,7 +339,7 @@ export default function Calendar({ schedule = [] }: props) {
 
                             ) : (
                                 <>
-                                    {isMonday(selectedDay) || isTuesday(selectedDay) ? <>
+                                    {isMonday(selectedDay) ? <>
                                         Não é possível agendar em dias que o campo é somente pelo ZOOM.</> :
                                         <div className='flex flex-col gap-2'>
                                             <p>Nenhum território agendado para este dia.</p>
