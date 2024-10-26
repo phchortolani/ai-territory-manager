@@ -55,6 +55,12 @@
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%
   }
+
+  .desktop-mode {
+    width: 1024px;
+    transform: scale(1);
+    transform-origin: top left;
+}
 }
 @layer base {
   * {

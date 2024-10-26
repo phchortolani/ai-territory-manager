@@ -6,7 +6,7 @@ export type OptionType = {
     label: string
 }
 
-export const Select2 = ({ options, defaultValue, onChange, isDisabled }: { options: OptionType[], defaultValue: OptionType[], onChange: (value: MultiValue<OptionType>) => void, isDisabled?: boolean }) => (
+export const Select2 = ({ options, defaultValue, onChange, isDisabled }: { options: OptionType[], defaultValue?: OptionType[], onChange: (value: MultiValue<OptionType>) => void, isDisabled?: boolean }) => (
     <Select
         defaultValue={defaultValue}
         isMulti

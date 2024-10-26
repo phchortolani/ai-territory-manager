@@ -82,9 +82,15 @@ export const columns: ColumnDef<Brother>[] = [
     {
         accessorKey: "brother_name",
         header: () => <div>Nome</div>,
-        cell: ({ row }) => {
+        cell: function ActiveCell({ row }) {
             const name = row.getValue<string>("brother_name")
-            return <div>{name}</div>
+            const sex = row.original.sex
+            return <div className="flex flex-col gap-2">
+                <div className="font-semibold"> {name}</div>
+                <div>
+                    <div className="text-xs"><b>Sexo:</b> {sex === "M" ? "Masculino" : "Feminino"}</div>
+                </div>
+            </div>
         },
     },
     {
@@ -98,7 +104,7 @@ export const columns: ColumnDef<Brother>[] = [
             const allBrothers = table.getPreFilteredRowModel().rows.map(x => x.original)
             const id = row.getValue<number>("id")
             const options = allBrothers.map(x => { return { value: x.brother_name, label: x.brother_name } })
-            const families: Brother[] = row.original.families
+            const families: Brother[] = row.original.families ?? []
             const defaultOptions = families?.map(x => { return { value: x.brother_name, label: x.brother_name } })
 
             async function invalidateQueries() {
@@ -119,11 +125,58 @@ export const columns: ColumnDef<Brother>[] = [
                     onEnd: () => setIsLoading(false)
                 })
             }
-
-
-
             return <div className="max-w-sm">
                 <Select2 isDisabled={isLoading} options={options?.filter(x => x.value !== row.original.brother_name)} defaultValue={defaultOptions} onChange={onChange} />
+            </div>
+        },
+    },
+    {
+        accessorKey: "times",
+        size: 40,
+        maxSize: 30,
+        header: () => <div>Horários</div>,
+        cell: function ActiveCell({ row, table }) {
+            const queryClient = useQueryClient();
+            const [isLoading, setIsLoading] = useState(false)
+            /*     const allBrothers = table.getPreFilteredRowModel().rows.map(x => x.original)
+                
+                const options = allBrothers.map(x => { return { value: x.brother_name, label: x.brother_name } }) */
+
+            const options = [{
+                value: "1",
+                label: "SEG - 08:00-10:00"
+            },
+            {
+                value: "2",
+                label: "QUA - 08:00-10:00"
+            },
+            {
+                value: "3",
+                label: "SAB - 08:00-10:00"
+            },
+            {
+                value: "4",
+                label: "DOM - 08:00-10:00"
+            }
+            ]
+
+            async function invalidateQueries() {
+                queryClient.invalidateQueries({ queryKey: ["brothers"] })
+            }
+
+            async function onChange(value: MultiValue<OptionType>) {
+
+                /*    const values = value.map(x => x.value) */
+
+                /* 
+                                await UpdateBrother(brother_edited, "families", undefined, {
+                                    onUpdate: invalidateQueries,
+                                    onStart: () => setIsLoading(true),
+                                    onEnd: () => setIsLoading(false)
+                                }) */
+            }
+            return <div className="max-w-sm">
+                <Select2 isDisabled={isLoading} options={options?.filter(x => x.value !== row.original.brother_name)} onChange={onChange} />
             </div>
         },
     },

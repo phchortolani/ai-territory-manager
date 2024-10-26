@@ -12,10 +12,20 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 import { toast } from "@/hooks/use-toast";
 import { Brother, BrotherSchema } from "@/models/brother";
 import { saveBrother } from "@/services/brothersService";
 import { zodResolver } from "@hookform/resolvers/zod";
+
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -26,11 +36,11 @@ export function BrotherModal({ btn }: { btn: { name: string } }) {
     const { register, handleSubmit, formState: { errors }, setValue, clearErrors, reset, watch } = useForm<Brother>({
         resolver: zodResolver(BrotherSchema),
         defaultValues: {
+            sex: 'M',
             active: false,
             active_tpl: false
         }
     });
-
 
     async function submit(data: Brother) {
         await saveBrother(data).then(res => {
@@ -83,10 +93,21 @@ export function BrotherModal({ btn }: { btn: { name: string } }) {
                 </DialogHeader>
                 <div className="flex flex-col gap-4">
                     <div className="flex flex-col gap-1">
-                        <Label htmlFor="brother_name">Nome
-                        </Label>
+                        <Label htmlFor="brother_name">Nome</Label>
                         <Input maxLength={60} {...register("brother_name")} className={errors.brother_name ? "border-red-500" : ""} />
                         {errors.brother_name && <p className="text-red-500 text-xs">{errors.brother_name.message}</p>}
+                    </div>
+                    <div>
+                        <Label htmlFor="sex">Sexo</Label>
+                        <Select   {...register("sex")}>
+                            <SelectTrigger className="w-full" >
+                                <SelectValue placeholder="Selecione..." />
+                            </SelectTrigger>
+                            <SelectContent  >
+                                <SelectItem value="M">Homem</SelectItem>
+                                <SelectItem value="F">Mulher</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                     <div className="flex flex-col gap-4">
                         <div className="flex flex-col gap-2">
