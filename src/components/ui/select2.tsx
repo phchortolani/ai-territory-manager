@@ -10,6 +10,7 @@ export const Select2 = ({ options, defaultValue, onChange, isDisabled }: { optio
     <Select
         defaultValue={defaultValue}
         isMulti
+        closeMenuOnSelect={false}
         isDisabled={isDisabled}
         onChange={onChange}
         name="colors"

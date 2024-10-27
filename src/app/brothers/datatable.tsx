@@ -65,31 +65,18 @@ export function DataTable<TData, TValue>({
                     </ul>
                 </div>
 
-                <Input
-                    placeholder="Filtrar nomes..."
-                    value={(table.getColumn("brother_name")?.getFilterValue() as string) ?? ""}
-                    onChange={(event) =>
-                        table.getColumn("brother_name")?.setFilterValue(event.target.value)
-                    }
-                    className="max-w-lg mt-2 md:mt-0"
-                />
+                <Input placeholder="Filtrar nomes..." value={(table.getColumn("brother_name")?.getFilterValue() as string) ?? ""} onChange={(event) => table.getColumn("brother_name")?.setFilterValue(event.target.value)} className="max-w-lg mt-2 md:mt-0" />
             </div>
 
             <div className="rounded-md border">
                 <Table>
                     <TableHeader>
-
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
                                 {headerGroup.headers.map((header) => {
                                     return (
                                         <TableHead key={header.id}>
-                                            {header.isPlaceholder
-                                                ? null
-                                                : flexRender(
-                                                    header.column.columnDef.header,
-                                                    header.getContext()
-                                                )}
+                                            {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                                         </TableHead>
                                     )
                                 })}
@@ -99,10 +86,7 @@ export function DataTable<TData, TValue>({
                     <TableBody>
                         {table.getRowModel().rows?.length ? (
                             table.getRowModel().rows.map((row) => (
-                                <TableRow
-                                    key={row.id}
-                                    data-state={row.getIsSelected() && "selected"}
-                                >
+                                <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell key={cell.id}>
                                             {flexRender(cell.column.columnDef.cell, cell.getContext())}

@@ -12,9 +12,10 @@ import { TrashIcon } from "@heroicons/react/24/outline"
 import { useState } from "react"
 import { OptionType, Select2 } from "@/components/ui/select2"
 import { MultiValue } from "react-select"
+import { TplDayTime } from "@/models/tpl_day_time"
 
 
-type UpdateBrotherType = "active" | 'active_tpl' | 'families'
+type UpdateBrotherType = "active" | 'active_tpl' | 'families' | 'day_time'
 
 
 async function UpdateBrother(brother: Brother, type: UpdateBrotherType, value?: boolean, effect?: { onUpdate?: () => void, onStart?: () => void, onEnd?: () => void }) {
@@ -138,27 +139,14 @@ export const columns: ColumnDef<Brother>[] = [
         cell: function ActiveCell({ row, table }) {
             const queryClient = useQueryClient();
             const [isLoading, setIsLoading] = useState(false)
-            /*     const allBrothers = table.getPreFilteredRowModel().rows.map(x => x.original)
-                
-                const options = allBrothers.map(x => { return { value: x.brother_name, label: x.brother_name } }) */
 
-            const options = [{
-                value: "1",
-                label: "SEG - 08:00-10:00"
-            },
-            {
-                value: "2",
-                label: "QUA - 08:00-10:00"
-            },
-            {
-                value: "3",
-                label: "SAB - 08:00-10:00"
-            },
-            {
-                value: "4",
-                label: "DOM - 08:00-10:00"
-            }
-            ]
+            let tpl_times = queryClient.getQueryData<TplDayTime[]>(["tpl_times"]) || []
+
+            const options = tpl_times?.map((x: TplDayTime) => { return { value: String(x.id), label: x.day_time } });
+
+            const tpl_times_id_default = row.original.tpl_times?.split(",");
+
+            const options_default = options.filter(x => tpl_times_id_default?.includes(x.value))
 
             async function invalidateQueries() {
                 queryClient.invalidateQueries({ queryKey: ["brothers"] })
@@ -166,17 +154,19 @@ export const columns: ColumnDef<Brother>[] = [
 
             async function onChange(value: MultiValue<OptionType>) {
 
-                /*    const values = value.map(x => x.value) */
+                const values = value.map(x => x.value)
 
-                /* 
-                                await UpdateBrother(brother_edited, "families", undefined, {
-                                    onUpdate: invalidateQueries,
-                                    onStart: () => setIsLoading(true),
-                                    onEnd: () => setIsLoading(false)
-                                }) */
+                const brother_edited = row.original
+                brother_edited.tpl_times = values.join(",")
+
+                await UpdateBrother(brother_edited, "day_time", undefined, {
+                    onUpdate: invalidateQueries,
+                    onStart: () => setIsLoading(true),
+                    onEnd: () => setIsLoading(false)
+                })
             }
             return <div className="max-w-sm">
-                <Select2 isDisabled={isLoading} options={options?.filter(x => x.value !== row.original.brother_name)} onChange={onChange} />
+                <Select2 isDisabled={isLoading} options={options} defaultValue={options_default} onChange={onChange} />
             </div>
         },
     },

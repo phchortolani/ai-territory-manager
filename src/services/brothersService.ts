@@ -1,16 +1,18 @@
 'use client'
 import { Brother } from "@/models/brother";
 import { ApiClient } from "./api_client";
+import { TplDayTime } from "@/models/tpl_day_time";
 
 const controller = 'brothers'
 
 export async function getBrothers() {
     const brothers = await ApiClient().get<Brother[]>(controller).then(result => {
         return result.data.sort((a, b) => a.brother_name.localeCompare(b.brother_name))
-    }).catch(x => [])
+    })
 
     return brothers
 }
+
 
 export async function updateBrother(brother: Brother) {
 

@@ -8,11 +8,12 @@ import { useEffect, useState } from "react"
 import { BrotherModal } from "./modal"
 import { useQuery } from "@tanstack/react-query"
 import { TplModal } from "./modal_tpl"
+import { getTimes } from "@/services/tplDayTimeService"
 
 
 export default function BrothersPage() {
     const { data, isLoading, isError, isRefetching } = useQuery({ queryFn: async () => await getBrothers(), queryKey: ["brothers"] });
-
+    const { data: tpl_times } = useQuery({ queryFn: async () => await getTimes(), queryKey: ["tpl_times"] });
     if (isLoading) return <div>Carregando...</div>
     if (isError) return <div>Falha ao carregar</div>
 
