@@ -11,13 +11,14 @@ import {
 } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import moment from "moment";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import React from "react";
 import { generateTplEvents, getTplEvents } from "@/services/tplEventsService";
 import { useQuery } from "@tanstack/react-query";
-
+import { DatePickerWithRange } from "@/components/ui/datapickerrange";
+import { DateRange } from "react-day-picker"
 export interface EventData {
     date: string;
     periods: {
@@ -30,25 +31,27 @@ export interface EventData {
 }
 
 
-const getEvents = async () => {
-    const events: EventData[] = await getTplEvents({ initial_date: moment('2024-10-01').toDate(), final_date: moment('2024-10-31').toDate() })
+const getEvents = async ({ initial_date, final_date }: { initial_date: Date, final_date: Date }) => {
+    const events: EventData[] = await getTplEvents({ initial_date, final_date })
     return events
 }
 
-const generateEvents = async () => {
-    const events: EventData[] = await generateTplEvents({ initial_date: moment('2024-10-01').toDate(), final_date: moment('2024-10-31').toDate() })
+const generateEvents = async ({ initial_date, final_date }: { initial_date: Date, final_date: Date }) => {
+    const events: EventData[] = await generateTplEvents({ initial_date, final_date })
     return events
 }
 
 export function TplModal({ btn }: { btn: { name: string } }) {
     const [open, setOpen] = useState(false);
     const [loadingPdf, setLoadingPdf] = useState(false);
+    const [dates_state, setDates] = useState({ initial_date: moment('2024-10-01').toDate(), final_date: moment('2024-10-31').toDate() })
 
-    const { data, refetch, isRefetching } = useQuery({ queryFn: getEvents, queryKey: ["tpl_events"], refetchOnWindowFocus: false });
+    const { data, refetch, isRefetching } = useQuery({ queryFn: () => getEvents(dates_state), queryKey: ["tpl_events"], refetchOnWindowFocus: false });
 
 
-    function generateNewList() {
-        generateEvents()
+    async function generateNewList() {
+        if (isRefetching) return
+        await generateEvents(dates_state)
         refetch()
     }
 
@@ -79,6 +82,19 @@ export function TplModal({ btn }: { btn: { name: string } }) {
             setLoadingPdf(false);
         }
     }
+
+    async function onChangeDate(data_range: DateRange) {
+        const initial_date = data_range.from
+        const final_date = data_range.to
+        if (initial_date && final_date) {
+            setDates({ initial_date, final_date })
+        }
+
+    }
+
+    useEffect(() => {
+        refetch()
+    }, [dates_state.initial_date, dates_state.final_date])
 
     return (
         <Dialog open={open} onOpenChange={(c) => setOpen(c)}>
@@ -138,6 +154,7 @@ export function TplModal({ btn }: { btn: { name: string } }) {
                         </div>
                     </div>
                     <DialogFooter className="flex items-center justify-center flex-col gap-2 md:flex-row">
+                        <DatePickerWithRange initial_date={moment('2024-10-01').toDate()} final_date={moment('2024-10-31').toDate()} onChange={onChangeDate} />
                         <Button type="button" onClick={generateNewList} className="bg-blue-500 hover:bg-blue-700">Gerar nova lista</Button>
                         <Button type="button" onClick={generatePDF} className="bg-green-500 hover:bg-green-700">Download PDF</Button>
                     </DialogFooter>
