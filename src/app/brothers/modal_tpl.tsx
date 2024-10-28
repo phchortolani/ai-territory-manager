@@ -15,31 +15,40 @@ import { useState } from "react";
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import React from "react";
+import { generateTplEvents, getTplEvents } from "@/services/tplEventsService";
+import { useQuery } from "@tanstack/react-query";
+
+export interface EventData {
+    date: string;
+    periods: {
+        time: string;
+        pairs: {
+            brother: string;
+            support: string;
+        }[];
+    }[];
+}
+
+
+const getEvents = async () => {
+    const events: EventData[] = await getTplEvents({ initial_date: moment('2024-10-01').toDate(), final_date: moment('2024-10-31').toDate() })
+    return events
+}
+
+const generateEvents = async (p0: { initialDate: Date; finalDate: Date; }) => {
+    const events: EventData[] = await generateTplEvents({ initial_date: moment('2024-10-01').toDate(), final_date: moment('2024-10-31').toDate() })
+    return events
+}
 
 export function TplModal({ btn }: { btn: { name: string } }) {
     const [open, setOpen] = useState(false);
     const [loadingPdf, setLoadingPdf] = useState(false);
-    const data = [
-        {
-            date: "segunda-feira, 7 de outubro de 2024",
-            periods: [
-                {
-                    time: "8:00-10:00",
-                    pair_1: { brother: "Gerônimo dos Santos", support: "Valdir M. da Silva" },
-                    pair_2: { brother: "Claudia C. S. Alvares", support: "Jacira de L. C. da Silva" }
-                },
-                {
-                    time: "10:00-12:00",
-                    pair_1: { brother: "Karin Hortel Lecoufle", support: "Elizabete C. Nasc. Militão" },
-                    pair_2: { brother: "Paulo R. Lima Jr", support: "Valdir M. da Silva" }
-                },
-            ],
-        },
-        // Outros dados omitidos para simplificação...
-    ];
+
+    const { data, refetch } = useQuery({ queryFn: getEvents, queryKey: ["tpl_events"], refetchOnWindowFocus: false });
+
 
     async function generatePDF() {
-        if(loadingPdf) return;
+        if (loadingPdf) return;
         setLoadingPdf(true);
         const content = document.getElementById('pdf-content');
         if (!content) return;
@@ -91,31 +100,31 @@ export function TplModal({ btn }: { btn: { name: string } }) {
                                         <TableHead align="right" className="text-center">Horário</TableHead>
                                         <TableHead>Dupla 1</TableHead>
                                         <TableHead>Dupla 2</TableHead>
+                                        <TableHead>Dupla 3</TableHead>
+                                        <TableHead>Dupla 4</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {data.map((row, rowIndex) => (
+                                    {data?.map((row, rowIndex) => (
                                         <React.Fragment key={rowIndex}>
-                                            {row.periods.map((period, periodIndex) => (
+                                            {row?.periods.map((period, periodIndex) => (
                                                 <TableRow key={`${rowIndex}-${periodIndex}`}>
                                                     {periodIndex === 0 && (
-                                                        <TableCell rowSpan={row.periods.length} align="center" className="border">
+                                                        <TableCell rowSpan={row?.periods.length} align="center" className="border">
                                                             {row.date}
                                                         </TableCell>
                                                     )}
                                                     <TableCell align="center" className="border">{period.time}</TableCell>
-                                                    <TableCell className="border">
-                                                        <div className="flex flex-col">
-                                                            <span>{period.pair_1.brother}</span>
-                                                            <span>{period.pair_1.support}</span>
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell className="border">
-                                                        <div className="flex flex-col">
-                                                            <span>{period.pair_2.brother}</span>
-                                                            <span>{period.pair_2.support}</span>
-                                                        </div>
-                                                    </TableCell>
+
+                                                    {period.pairs.map((pair, pairIndex) => (
+                                                        <TableCell key={`${rowIndex}-${periodIndex}-${pairIndex}`} className="border">
+                                                            <div className="flex flex-col">
+                                                                <span>{pair.brother}</span>
+                                                                <span>{pair.support}</span>
+                                                            </div>
+                                                        </TableCell>
+                                                    ))}
+
                                                 </TableRow>
                                             ))}
                                         </React.Fragment>
