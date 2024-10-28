@@ -35,7 +35,7 @@ const getEvents = async () => {
     return events
 }
 
-const generateEvents = async (p0: { initialDate: Date; finalDate: Date; }) => {
+const generateEvents = async () => {
     const events: EventData[] = await generateTplEvents({ initial_date: moment('2024-10-01').toDate(), final_date: moment('2024-10-31').toDate() })
     return events
 }
@@ -44,8 +44,13 @@ export function TplModal({ btn }: { btn: { name: string } }) {
     const [open, setOpen] = useState(false);
     const [loadingPdf, setLoadingPdf] = useState(false);
 
-    const { data, refetch } = useQuery({ queryFn: getEvents, queryKey: ["tpl_events"], refetchOnWindowFocus: false });
+    const { data, refetch, isRefetching } = useQuery({ queryFn: getEvents, queryKey: ["tpl_events"], refetchOnWindowFocus: false });
 
+
+    function generateNewList() {
+        generateEvents()
+        refetch()
+    }
 
     async function generatePDF() {
         if (loadingPdf) return;
@@ -90,18 +95,16 @@ export function TplModal({ btn }: { btn: { name: string } }) {
                             Abaixo é possível consultar e gerar o TPL
                         </DialogDescription>
                     </DialogHeader>
-                    <div id="pdf-content" className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-4">
                         {/* Tabela com dados */}
                         <div className="overflow-y-auto max-h-[calc(100vh-300px)]">
-                            {loadingPdf ? <p>Gerando PDF...</p> : <Table className="border">
+                            {isRefetching ? <p>Gerando nova lista...</p> : loadingPdf ? <p>Gerando PDF...</p> : <Table id="pdf-content" className="border">
                                 <TableHeader className="bg-slate-200 font-bold">
                                     <TableRow>
                                         <TableHead align="center" className="text-center">Data</TableHead>
                                         <TableHead align="right" className="text-center">Horário</TableHead>
                                         <TableHead>Dupla 1</TableHead>
                                         <TableHead>Dupla 2</TableHead>
-                                        <TableHead>Dupla 3</TableHead>
-                                        <TableHead>Dupla 4</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -132,11 +135,11 @@ export function TplModal({ btn }: { btn: { name: string } }) {
                                 </TableBody>
                             </Table>}
 
-
                         </div>
                     </div>
-                    <DialogFooter className="flex items-center justify-center">
-                        <Button type="button" onClick={generatePDF} className="bg-green-500 hover:bg-green-700">Gerar PDF</Button>
+                    <DialogFooter className="flex items-center justify-center flex-col gap-2 md:flex-row">
+                        <Button type="button" onClick={generateNewList} className="bg-blue-500 hover:bg-blue-700">Gerar nova lista</Button>
+                        <Button type="button" onClick={generatePDF} className="bg-green-500 hover:bg-green-700">Download PDF</Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
