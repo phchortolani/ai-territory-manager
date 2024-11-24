@@ -18,10 +18,7 @@ import {
 moment.locale("pt-br")
 
 export function DatePickerWithRange({ final_date, initial_date, onChange }: { initial_date?: Date, final_date?: Date, onChange?: (date: DateRange) => void }) {
-    const [date, setDate] = React.useState<DateRange | undefined>({
-        from: initial_date,
-        to: final_date,
-    })
+    const [date, setDate] = React.useState<DateRange | undefined>({ from: initial_date, to: final_date, })
 
     function setDateRange(range: DateRange | undefined) {
         const from = range?.from

@@ -19,6 +19,8 @@ import { generateTplEvents, getTplEvents } from "@/services/tplEventsService";
 import { useQuery } from "@tanstack/react-query";
 import { DatePickerWithRange } from "@/components/ui/datapickerrange";
 import { DateRange } from "react-day-picker"
+import * as XLSX from "xlsx-js-style";
+
 export interface EventData {
     date: string;
     periods: {
@@ -43,11 +45,14 @@ const generateEvents = async ({ initial_date, final_date }: { initial_date: Date
 
 export function TplModal({ btn }: { btn: { name: string } }) {
     const [open, setOpen] = useState(false);
-    const [loadingPdf, setLoadingPdf] = useState(false);
-    const [dates_state, setDates] = useState({ initial_date: moment('2024-10-01').toDate(), final_date: moment('2024-10-31').toDate() })
+    const [IsLoadingExportData, setIsLoadingExportData] = useState(false);
+    const [dates_state, setDates] = useState({
+        initial_date: moment().startOf('month').toDate(),
+        final_date: moment().endOf('month').toDate()
+    });
+    const tableRef = React.useRef(null);
 
     const { data, refetch, isRefetching } = useQuery({ queryFn: () => getEvents(dates_state), queryKey: ["tpl_events"], refetchOnWindowFocus: false });
-
 
     async function generateNewList() {
         if (isRefetching) return
@@ -56,9 +61,9 @@ export function TplModal({ btn }: { btn: { name: string } }) {
     }
 
     async function generatePDF() {
-        if (loadingPdf) return;
-        setLoadingPdf(true);
-        const content = document.getElementById('pdf-content');
+        if (IsLoadingExportData) return;
+        setIsLoadingExportData(true);
+        const content = document.getElementById('export-content');
         if (!content) return;
 
         content.classList.add('desktop-mode');
@@ -79,7 +84,7 @@ export function TplModal({ btn }: { btn: { name: string } }) {
             console.error("Erro ao gerar o PDF", error);
         } finally {
             content.classList.remove('desktop-mode');
-            setLoadingPdf(false);
+            setIsLoadingExportData(false);
         }
     }
 
@@ -91,6 +96,58 @@ export function TplModal({ btn }: { btn: { name: string } }) {
         }
 
     }
+
+    async function exportToExcel() {
+        if (!tableRef.current) return;
+    
+        // Obtenha os dados da tabela como HTML
+        const table = tableRef.current;
+        const worksheet = XLSX.utils.table_to_sheet(table);
+    
+        // Centralizar o conteúdo em todas as células
+        Object.keys(worksheet).forEach((key) => {
+            if (key.startsWith('!')) return; // Ignorar metadados do XLSX
+            worksheet[key].s = {
+                alignment: {
+                    horizontal: "center",
+                    vertical: "center",
+                },
+            };
+        });
+    
+        // Estilizar cabeçalho (primeira linha)
+        const headerRange = XLSX.utils.decode_range(worksheet['!ref']!);
+        for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
+            const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col }); // Primeira linha (0)
+            if (worksheet[cellAddress]) {
+                worksheet[cellAddress].s = {
+                    font: { bold: true }, // Título em negrito
+                    alignment: { horizontal: "center", vertical: "center" },
+                };
+            }
+        }
+    
+        // Ajustar largura das colunas
+        const colWidths = [];
+        for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
+            let maxWidth = 10; // Largura padrão mínima
+            for (let row = headerRange.s.r; row <= headerRange.e.r; row++) {
+                const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+                const cellValue = worksheet[cellAddress]?.v ?? "";
+                maxWidth = Math.max(maxWidth, String(cellValue).length);
+            }
+            colWidths.push({ wch: maxWidth + 2 }); // Ajuste adicional para espaçamento
+        }
+        worksheet["!cols"] = colWidths;
+    
+        // Crie a pasta de trabalho e adicione a planilha
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "TPL");
+    
+        // Gere e faça o download do arquivo
+        XLSX.writeFile(workbook, `tpl_${moment().format("DDMMYYYY_HHmm")}.xlsx`);
+    }
+
 
     useEffect(() => {
         refetch()
@@ -114,7 +171,7 @@ export function TplModal({ btn }: { btn: { name: string } }) {
                     <div className="flex flex-col gap-4">
                         {/* Tabela com dados */}
                         <div className="overflow-y-auto max-h-[calc(100vh-300px)]">
-                            {isRefetching ? <p>Gerando nova lista...</p> : loadingPdf ? <p>Gerando PDF...</p> : <Table id="pdf-content" className="border">
+                            {isRefetching ? <p>Gerando nova lista...</p> : IsLoadingExportData ? <p>Gerando Download...</p> : <Table ref={tableRef} id="export-content" className="border">
                                 <TableHeader className="bg-slate-200 font-bold">
                                     <TableRow>
                                         <TableHead align="center" className="text-center">Data</TableHead>
@@ -138,7 +195,7 @@ export function TplModal({ btn }: { btn: { name: string } }) {
                                                     {period.pairs.map((pair, pairIndex) => (
                                                         <TableCell key={`${rowIndex}-${periodIndex}-${pairIndex}`} className="border">
                                                             <div className="flex flex-col">
-                                                                <span>{pair.brother}</span>
+                                                                <span>{pair.brother}&nbsp;</span>
                                                                 <span>{pair.support}</span>
                                                             </div>
                                                         </TableCell>
@@ -154,9 +211,12 @@ export function TplModal({ btn }: { btn: { name: string } }) {
                         </div>
                     </div>
                     <DialogFooter className="flex items-center justify-center flex-col gap-2 md:flex-row">
-                        <DatePickerWithRange initial_date={moment('2024-10-01').toDate()} final_date={moment('2024-10-31').toDate()} onChange={onChangeDate} />
+                        <DatePickerWithRange initial_date={dates_state.initial_date} final_date={dates_state.final_date} onChange={onChangeDate} />
                         <Button type="button" onClick={generateNewList} className="bg-blue-500 hover:bg-blue-700">Gerar nova lista</Button>
-                        <Button type="button" onClick={generatePDF} className="bg-green-500 hover:bg-green-700">Download PDF</Button>
+                        <Button type="button" onClick={generatePDF} className="bg-red-500 hover:bg-red-700">Download PDF</Button>
+                        <Button type="button" onClick={exportToExcel} className="bg-green-500 hover:bg-green-700">
+                            Download XLSX
+                        </Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
