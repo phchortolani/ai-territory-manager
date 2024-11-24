@@ -14,6 +14,7 @@ export const Select2 = ({ options, defaultValue, onChange, isDisabled }: { optio
         isDisabled={isDisabled}
         onChange={onChange}
         name="colors"
+        placeholder="Selecione..."
         options={options}
         className="basic-multi-select"
         classNamePrefix="select"
