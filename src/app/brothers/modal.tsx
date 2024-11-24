@@ -38,7 +38,7 @@ export function BrotherModal({ btn }: { btn: { name: string } }) {
         defaultValues: {
             sex: 'M',
             active: false,
-            active_tpl: false
+            active_tpl: false,
         }
     });
 
