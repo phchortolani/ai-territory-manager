@@ -56,11 +56,12 @@
     --chart-5: 340 75% 55%
   }
 
+
+  
   .desktop-mode {
-    width: 1024px;
-    transform: scale(1);
-    transform-origin: top left;
-}
+    width: 1280px !important; /* Largura fixa para exportação */
+    margin: 0 auto; /* Centralizar */
+  }
 }
 @layer base {
   * {

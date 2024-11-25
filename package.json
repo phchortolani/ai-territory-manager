@@ -36,6 +36,7 @@
     "react-dom": "^18",
     "react-export-table-to-excel": "^1.0.6",
     "react-hook-form": "^7.53.0",
+    "react-loading-indicators": "^1.0.0",
     "react-select": "^5.8.1",
     "react-to-pdf": "^1.0.1",
     "tailwind-merge": "^2.5.3",
