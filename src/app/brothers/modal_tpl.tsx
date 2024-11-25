@@ -70,10 +70,12 @@ export function TplModal({ btn }: { btn: { name: string } }) {
 
     async function generatePDF() {
         if (IsLoadingExportData) return;
+        setIsLoadingExportData(true);
+
         const content = document.getElementById('export-content');
         if (!content) return;
 
-        setIsLoadingExportData(true);
+
         const sizewidth = window.innerWidth;
         if (sizewidth > 1280) {
             content.classList.add(`w-[${1024}px]`);
@@ -249,21 +251,19 @@ export function TplModal({ btn }: { btn: { name: string } }) {
                             </div>
 
                             <div className="flex flex-col w-full md:flex-row gap-2">
-                                <Button type="button" onClick={generateNewList} className="bg-blue-500 hover:bg-blue-700">
+                                <Button type="button" disabled={IsLoadingExportData} onClick={generateNewList} className="bg-blue-500 hover:bg-blue-700 disabled:opacity-20">
                                     Gerar nova lista
                                 </Button>
-                                <Button type="button" onClick={generatePDF} className="bg-red-500 hover:bg-red-700">
+                                <Button type="button" disabled={IsLoadingExportData} onClick={generatePDF} className="bg-red-500 hover:bg-red-700 disabled:opacity-20">
                                     Download PDF
                                     <DownloadIcon />
                                 </Button>
-                                <Button type="button" onClick={exportToExcel} className="bg-green-500 hover:bg-green-700">
+                                <Button type="button" disabled={IsLoadingExportData} onClick={exportToExcel} className="bg-green-500 hover:bg-green-700 disabled:opacity-20">
                                     Download XLSX
                                     <DownloadIcon />
                                 </Button>
                             </div>
                         </div>
-
-
                     </DialogFooter>
                 </form>
             </DialogContent>
