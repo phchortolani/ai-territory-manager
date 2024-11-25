@@ -236,7 +236,7 @@ export function TplModal({ btn }: { btn: { name: string } }) {
                         <div className="overflow-y-auto max-h-[calc(100vh-300px)]">
                             {
                                 isRefetching ?
-                                    <p>Gerando nova lista...</p> :
+                                    <div className="w-full h-full flex justify-center items-center  flex-col gap-2 animate-pulse"><ThreeDot color="#2563eb " size="medium" text="" textColor="" /> <div className="text-sm text-blue-500">Carregando lista</div></div> :
                                     <TableTPL ref={tableRef} id="export-content" data={data} />
                             }
 
