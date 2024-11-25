@@ -170,11 +170,11 @@ export function TplModal({ btn }: { btn: { name: string } }) {
 
 
     useEffect(() => {
-        refetch()
+        if (refetch) refetch()
     }, [dates_state.initial_date, dates_state.final_date])
 
 
-    const TableTPL = forwardRef<HTMLTableElement, TableTPLProps>(({ data, id }: TableTPLProps, ref) => {
+    const TableTPL = React.forwardRef<HTMLTableElement, TableTPLProps>(({ data, id }: TableTPLProps, ref) => {
 
         return <Table ref={ref} id={id} className="border" >
             <TableHeader className="bg-slate-200 font-bold">
@@ -213,7 +213,7 @@ export function TplModal({ btn }: { btn: { name: string } }) {
         </Table>
     });
 
-
+    TableTPL.displayName = "TableTPL"
 
     return (
         <Dialog open={open} onOpenChange={(c) => setOpen(c)}>
