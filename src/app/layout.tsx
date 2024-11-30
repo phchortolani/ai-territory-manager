@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import Navbar from '@/components/navbar'
 import { Toaster } from "@/components/ui/toaster"
 import ReactQueryProvider from '@/contexts/ReactQueryProvider'
+import { AuthProvider } from '@/contexts/AuthContext'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -12,18 +12,14 @@ export const metadata: Metadata = {
   description: 'Territórios Alto do Baeta',
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body className={inter.className}>
         <ReactQueryProvider>
-          <Navbar>
+          <AuthProvider>
             {children}
-          </Navbar>
+          </AuthProvider>
           <Toaster />
         </ReactQueryProvider>
       </body>

@@ -25,7 +25,7 @@ import { ms, ptBR } from 'date-fns/locale'
 import { RoundsDto } from '@/dtos/roundsDto'
 import { EStatus_territory } from '@/enums/status_territory'
 import { SimpleButton } from '@/components/buttons/simple_button'
-import { MarkRoundAsDone, Schedule } from '@/services/roundsService'
+import { getRoundsByStatus, MarkRoundAsDone, Schedule } from '@/services/roundsService'
 import { useRouter } from 'next/navigation'
 import { getLeaders } from '@/services/scheduleService'
 import { Leaders } from '@/models/leaders'
@@ -33,6 +33,8 @@ import { z } from "zod"
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ISchedule } from '@/dtos/schedule'
 import { Router } from 'next/router'
+import { useQuery } from '@tanstack/react-query'
+import { ThreeDot } from 'react-loading-indicators'
 
 
 
@@ -40,18 +42,18 @@ import { Router } from 'next/router'
 function classNames(...classes: any[]) {
     return classes.filter(Boolean).join(' ')
 }
-
+/* 
 type props = {
     schedule: RoundsDto[]
 }
-
+ */
 
 const schema = z.object({
     leader_id: z.string().optional(),
     repeat_next_week: z.boolean().optional()
 }).required()
 
-export default function Calendar({ schedule = [] }: props) {
+export default function Calendar() {
     let today = startOfToday();
     const router = useRouter()
     const [modalOpen, setOpenModal] = useState<boolean>(false)
@@ -62,9 +64,11 @@ export default function Calendar({ schedule = [] }: props) {
     const [edit, setEdit] = useState<boolean>(false)
     const [msg, setMsg] = useState<string>("")
 
+    const { data: schedule, isLoading, refetch } = useQuery({ queryFn: async () => await getRoundsByStatus(), queryKey: ["getRoundsByStatus"], refetchOnWindowFocus: false });
+
+
 
     let firstDayCurrentMonth = parse(currentMonth, 'MMM-yyyy', new Date())
-
 
     let days = eachDayOfInterval({
         start: startOfWeek(firstDayCurrentMonth),
@@ -81,20 +85,18 @@ export default function Calendar({ schedule = [] }: props) {
         setCurrentMonth(format(firstDayNextMonth, 'MMM-yyyy'))
     }
 
-    let selectedDayRounds = schedule?.filter((round) =>
-        isSameDay(parseISO(round.first_day.toString()), selectedDay) || (round?.last_day && isSameDay(parseISO(round.last_day.toString()), selectedDay))
-    )
+    let selectedDayRounds = schedule?.filter((round: RoundsDto) => isSameDay(parseISO(round.first_day.toString()), selectedDay) || (round?.last_day && isSameDay(parseISO(round.last_day.toString()), selectedDay)))
 
     function checkStatus(day: Date) {
-        const round = schedule.filter(x => isSameDay(parseISO(x.first_day.toString()), day) || (x?.last_day && isSameDay(parseISO(x?.last_day.toString()), day)))
-        const isDone = round.filter(x => x.status == EStatus_territory[1])
-        const running = round.filter(x => x.status == EStatus_territory[2])
+        const round = schedule?.filter(x => isSameDay(parseISO(x.first_day.toString()), day) || (x?.last_day && isSameDay(parseISO(x?.last_day.toString()), day)))
+        const isDone = round?.filter(x => x.status == EStatus_territory[1])
+        const running = round?.filter(x => x.status == EStatus_territory[2])
 
-        if (running.length > 0) {
-            if (running.some(x => isBefore(x.expected_return, today))) return <ExclamationTriangleIcon className={`w-5 h-5  text-white p-0.5 rounded-full bg-orange-500 animate-bounce`} />
+        if ((running?.length ?? 0) > 0) {
+            if (running?.some(x => isBefore(x.expected_return, today))) return <ExclamationTriangleIcon className={`w-5 h-5  text-white p-0.5 rounded-full bg-orange-500 animate-bounce`} />
             return <BriefcaseIcon className={`w-5 h-5  text-white p-0.5 rounded-full bg-red-500`} />
         }
-        else if (isDone.length == round.length) return <CheckCircleIcon className={`w-5 h-5 text-white rounded-full bg-green-500`} />
+        else if (isDone?.length == round?.length) return <CheckCircleIcon className={`w-5 h-5 text-white rounded-full bg-green-500`} />
         else return <CheckCircleIcon className={`w-5 h-5 text-white rounded-full bg-blue-500`} />
     }
 
@@ -103,19 +105,19 @@ export default function Calendar({ schedule = [] }: props) {
         const leaders: string[] = []
         const rounds_by_leaders: { leader: string, rounds: RoundsDto[] }[] = []
 
-        selectedRoundsofDay.forEach(x => {
+        selectedRoundsofDay?.forEach(x => {
             if (!leaders.some(registro => registro == x.leader)) leaders.push(x.leader);
         })
 
         leaders.forEach(leader => {
-            const roundsofleader = selectedDayRounds.filter(x => x.leader === leader)
-            if (!rounds_by_leaders.some(x => x.leader == leader)) rounds_by_leaders.push({ leader, rounds: roundsofleader.sort((a, b) => a.territory_id - b.territory_id) })
+            const roundsofleader = selectedDayRounds?.filter(x => x.leader === leader)
+            if (!rounds_by_leaders.some(x => x.leader == leader)) rounds_by_leaders.push({ leader, rounds: roundsofleader ? roundsofleader?.sort((a, b) => a.territory_id - b.territory_id) : [] })
         })
 
         return rounds_by_leaders
     }
 
-    const rounds_by_leaders = generateListOfRoundsByLeader(selectedDayRounds)
+    const rounds_by_leaders = generateListOfRoundsByLeader(selectedDayRounds || [])
 
     async function OpenSchedule() {
         const leaders = await getLeaders()
@@ -140,7 +142,7 @@ export default function Calendar({ schedule = [] }: props) {
 
     function CloseModal() {
         setOpenModal(false)
-        router.refresh()
+        refetch()
     }
 
     useEffect(() => {
@@ -148,6 +150,12 @@ export default function Calendar({ schedule = [] }: props) {
             navigator.clipboard.writeText(msg);
         }
     }, [msg])
+
+    if (isLoading) return <div>
+        <div className="w-full h-full flex justify-center items-center  flex-col gap-2 animate-pulse">
+            <ThreeDot color="#2563eb " size="medium" text="" textColor="" /> <div className="text-sm text-blue-500">Carregando</div>
+        </div>
+    </div>
 
     return (
         <div>
@@ -282,7 +290,7 @@ export default function Calendar({ schedule = [] }: props) {
                                     </button>
 
                                     <div>
-                                        {schedule.some((round) => isSameDay(parseISO(round.first_day.toString()), day) || (round.last_day && isSameDay(parseISO(round.last_day.toString()), day))) ?
+                                        {schedule?.some((round) => isSameDay(parseISO(round.first_day.toString()), day) || (round.last_day && isSameDay(parseISO(round.last_day.toString()), day))) ?
                                             (
                                                 <div className={`flex flex-initial rounded-md `}>
                                                     {checkStatus(day)}
@@ -333,7 +341,7 @@ export default function Calendar({ schedule = [] }: props) {
                                         </time>
                                     </p>
                                     {x.rounds.map((round: any) => (
-                                        <Round key={round.id} round={round} edit={edit} />
+                                        <Round key={round.id} round={round} edit={edit} refetch={refetch} />
                                     ))}
                                 </div>
 
@@ -361,7 +369,7 @@ export default function Calendar({ schedule = [] }: props) {
 }
 
 
-function Round({ round, edit }: { round: RoundsDto, edit: boolean }) {
+function Round({ round, edit, refetch }: { round: RoundsDto, edit: boolean, refetch: () => void }) {
     const [isLoadingMarkAsDone, setIsLoadingMarkAsDone] = useState<boolean>(false);
     const router = useRouter()
     let showQuestionIfWorked = false
@@ -369,7 +377,7 @@ function Round({ round, edit }: { round: RoundsDto, edit: boolean }) {
     async function ChangeStatusRound(round: RoundsDto, status: number) {
         setIsLoadingMarkAsDone(true)
         await MarkRoundAsDone(round, status).then(result => {
-            if (result) router.refresh()
+            if (result) refetch()
         }).finally(() => {
             setIsLoadingMarkAsDone(false)
         })

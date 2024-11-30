@@ -222,7 +222,7 @@ export function TplModal({ btn }: { btn: { name: string } }) {
                     {btn.name}
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[90vw]">
+            <DialogContent className="sm:max-w-[90vw] ">
                 <form className="grid gap-4 py-4">
                     <DialogHeader>
                         <DialogTitle>Agenda TPL</DialogTitle>

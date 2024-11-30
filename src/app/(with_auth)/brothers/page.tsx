@@ -9,12 +9,17 @@ import { BrotherModal } from "./modal"
 import { useQuery } from "@tanstack/react-query"
 import { TplModal } from "./modal_tpl"
 import { getTimes } from "@/services/tplDayTimeService"
+import { ThreeDot } from "react-loading-indicators"
 
 
 export default function BrothersPage() {
     const { data, isLoading, isError, isRefetching } = useQuery({ queryFn: async () => await getBrothers(), queryKey: ["brothers"] });
     const { data: tpl_times } = useQuery({ queryFn: async () => await getTimes(), queryKey: ["tpl_times"] });
-    if (isLoading) return <div>Carregando...</div>
+    if (isLoading) return <div>
+        <div className="w-full h-full flex justify-center items-center  flex-col gap-2 animate-pulse">
+            <ThreeDot color="#2563eb " size="medium" text="" textColor="" /> <div className="text-sm text-blue-500">Carregando</div>
+        </div>
+    </div>
     if (isError) return <div>Falha ao carregar</div>
 
     return (

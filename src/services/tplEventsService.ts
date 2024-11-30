@@ -2,7 +2,7 @@
 
 import { TplEvent } from "@/models/tpl_event";
 import { ApiClient } from "./api_client";
-import { EventData } from "@/app/brothers/modal_tpl";
+import { EventData } from "@/app/(with_auth)/brothers/modal_tpl";
 
 
 const controller = 'TplEvents'
