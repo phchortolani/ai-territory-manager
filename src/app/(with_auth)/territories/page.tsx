@@ -1,13 +1,18 @@
-import { TerritoryAndressDto } from "@/dtos/territoryAndressDto"
-import { TupleTerritoryAndress } from "@/dtos/tupleTerritoryAndress"
-import { Territory } from "@/models/territory"
+'use client'
 import { getTerritories } from "@/services/territoriesService"
-import { HomeIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { SearchTerritories } from "./search-territories"
+import { useQuery } from "@tanstack/react-query";
+import { ThreeDot } from "react-loading-indicators";
 
-export default async function Terrritories() {
-    const { territories, andressList }: TupleTerritoryAndress = await getTerritories()
+export default function Terrritories() {
+    const { data, isLoading } = useQuery({ queryFn: async () => await getTerritories(), queryKey: ["getTerritories"], refetchOnWindowFocus: false });
 
-    return <SearchTerritories territories={territories} andressList={andressList} />
+    if (isLoading) return <div>
+        <div className="w-full h-full flex justify-center items-center  flex-col gap-2 animate-pulse">
+            <ThreeDot color="#2563eb " size="medium" text="" textColor="" /> <div className="text-sm text-blue-500">Carregando</div>
+        </div>
+    </div>
+
+    return <SearchTerritories territories={data?.territories ?? []} andressList={data?.andressList ?? []} />
 
 }
