@@ -1,17 +1,11 @@
 'use client'
 import { Fragment, useEffect, useState } from 'react'
 import { Disclosure, Menu, Transition } from '@headlessui/react'
-import { Bars3Icon, BellIcon, UserCircleIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { Bars3Icon, UserCircleIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
-import { ArrowDownIcon, ChevronDownIcon, ExitIcon } from '@radix-ui/react-icons'
-
-
-
-const userNavigation = [
-    { name: 'Sair', href: '#' },
-]
+import { ChevronDownIcon, ExitIcon } from '@radix-ui/react-icons'
 
 function classNames(...classes: any) {
     return classes.filter(Boolean).join(' ')

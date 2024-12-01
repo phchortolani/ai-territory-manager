@@ -7,8 +7,8 @@ import { EventData } from "@/app/(with_auth)/brothers/modal_tpl";
 
 const controller = 'TplEvents'
 
-export async function generateTplEvents({ initial_date, final_date }: { initial_date: Date, final_date: Date }) {
-    const Events = await ApiClient().post<EventData[]>(controller + '/generate', { initial_date, final_date }).then(result => {
+export async function generateTplEvents({ initial_date, final_date, event_id }: { initial_date: Date, final_date: Date, event_id?: number }) {
+    const Events = await ApiClient().post<EventData[]>(controller + '/generate', { initial_date, final_date, event_id }).then(result => {
         return result.data
     })
     return Events
@@ -20,6 +20,8 @@ export async function getTplEvents({ initial_date, final_date }: { initial_date:
     })
     return Events
 }
+
+
 
 export async function updateTplEvent(TplEvent: TplEvent) {
     return await ApiClient()

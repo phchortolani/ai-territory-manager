@@ -17,7 +17,7 @@ import {
 
 moment.locale("pt-br")
 
-export function DatePickerWithRange({ final_date, initial_date, onChange }: { initial_date?: Date, final_date?: Date, onChange?: (date: DateRange) => void }) {
+export function DatePickerWithRange({ final_date, initial_date, onChange, disabled }: { disabled?: boolean, initial_date?: Date, final_date?: Date, onChange?: (date: DateRange) => void }) {
     const [date, setDate] = React.useState<DateRange | undefined>({ from: initial_date, to: final_date, })
 
     function setDateRange(range: DateRange | undefined) {
@@ -32,8 +32,8 @@ export function DatePickerWithRange({ final_date, initial_date, onChange }: { in
 
     return (
         <div className={cn("grid gap-2 w-full")}>
-            <Popover>
-                <PopoverTrigger asChild>
+            <Popover >
+                <PopoverTrigger asChild disabled={disabled}>
                     <Button
                         id="date"
                         variant={"outline"}

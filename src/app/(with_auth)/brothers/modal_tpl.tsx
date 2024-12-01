@@ -16,11 +16,11 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import React from "react";
 import { generateTplEvents, getTplEvents } from "@/services/tplEventsService";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { DatePickerWithRange } from "@/components/ui/datapickerrange";
 import { DateRange } from "react-day-picker"
 import * as XLSX from "xlsx-js-style";
-import { DownloadIcon } from "@radix-ui/react-icons";
+import { DownloadIcon, UpdateIcon } from "@radix-ui/react-icons";
 import { ThreeDot } from 'react-loading-indicators'
 
 
@@ -30,6 +30,7 @@ export interface EventData {
     periods: {
         time: string;
         pairs: {
+            id: number;
             brother: string;
             support: string;
         }[];
@@ -40,19 +41,23 @@ interface TableTPLProps {
     id?: string;
 }
 
+
 const getEvents = async ({ initial_date, final_date }: { initial_date: Date, final_date: Date }) => {
     const events: EventData[] = await getTplEvents({ initial_date, final_date })
     return events
 }
 
-const generateEvents = async ({ initial_date, final_date }: { initial_date: Date, final_date: Date }) => {
-    const events: EventData[] = await generateTplEvents({ initial_date, final_date })
+const generateEvents = async ({ initial_date, final_date, event_id }: { initial_date: Date, final_date: Date, event_id?: number }) => {
+    const events: EventData[] = await generateTplEvents({ initial_date, final_date, event_id })
     return events
 }
 
 export function TplModal({ btn }: { btn: { name: string } }) {
     const [open, setOpen] = useState(false);
     const [IsLoadingExportData, setIsLoadingExportData] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [generationPairId, setGenerationPairId] = useState<number | undefined>();
+    const queryClient = useQueryClient();
     const [dates_state, setDates] = useState({
         initial_date: moment().startOf('month').toDate(),
         final_date: moment().endOf('month').toDate()
@@ -64,14 +69,59 @@ export function TplModal({ btn }: { btn: { name: string } }) {
 
     async function generateNewList() {
         if (isRefetching) return
+        setIsGenerating(true)
         await generateEvents(dates_state)
+        setIsGenerating(false)
         refetch()
     }
+    async function generateNewPair(tpl_event_id: number) {
+        setGenerationPairId(tpl_event_id)
+        const new_event = await generateEvents({ event_id: tpl_event_id, initial_date: dates_state.initial_date, final_date: dates_state.final_date })
+
+        const new_pair = new_event[0].periods[0].pairs[0]
+
+        const event_selected_index = data?.findIndex(x =>
+            x.periods.some(a => a.pairs.some(a => a.id == tpl_event_id))
+        );
+
+        if (event_selected_index === undefined || event_selected_index < 0 || !data) return;
+
+        const periods = data[event_selected_index]?.periods;
+
+        const old_pair_index = periods?.findIndex(x =>
+            x.pairs.some(a => a.id == tpl_event_id)
+        );
+
+        if (old_pair_index === undefined || old_pair_index < 0) return;
+
+        const updatedData = [...data];
+        updatedData[event_selected_index] = {
+            ...updatedData[event_selected_index],
+            periods: updatedData[event_selected_index].periods.map((period, index) =>
+                index === old_pair_index
+                    ? {
+                        ...period,
+                        pairs: [
+                            ...periods[old_pair_index].pairs.filter(x => x.id != tpl_event_id),
+                            { ...new_pair, id: tpl_event_id }
+                        ].sort((a, b) => a.id - b.id)
+                    }
+                    : period
+            )
+        };
+
+        queryClient.setQueriesData(['tpl_events'], updatedData);
+        setGenerationPairId(undefined)
+    }
+
+
+
 
     async function generatePDF() {
         if (IsLoadingExportData) return;
         setIsLoadingExportData(true);
 
+        const refresh_itens_to_hidden = document.getElementsByClassName('refresh_pair');
         const content = document.getElementById('export-content');
         if (!content) return;
 
@@ -83,6 +133,9 @@ export function TplModal({ btn }: { btn: { name: string } }) {
         } else {
             content.classList.add('desktop-mode');
 
+        }
+        for (let i = 0; i < refresh_itens_to_hidden.length; i++) {
+            refresh_itens_to_hidden[i].classList.add('hidden');
         }
         content.style.fontSize = '16px';
         try {
@@ -98,12 +151,18 @@ export function TplModal({ btn }: { btn: { name: string } }) {
             });
             const imgWidth = pdfWidth - 40;
             const imgHeight = (canvas.height * imgWidth) / canvas.width;
-            pdf.addImage(imgData, 'PNG', 20, 50, imgWidth, imgHeight);
-            pdf.save(moment().format('MMMM_YYYY') + '_TPL.pdf');
+            await pdf.addImage(imgData, 'PNG', 20, 50, imgWidth, imgHeight);
+            await pdf.save(moment().format('MMMM_YYYY') + '_TPL.pdf');
             content.classList.remove('desktop-mode');
+            for (let i = 0; i < refresh_itens_to_hidden.length; i++) {
+                refresh_itens_to_hidden[i].classList.remove('hidden');
+            }
             setIsLoadingExportData(false);
         } catch (error) {
             console.error("Erro ao gerar o PDF", error);
+            for (let i = 0; i < refresh_itens_to_hidden.length; i++) {
+                refresh_itens_to_hidden[i].classList.remove('hidden');
+            }
             setIsLoadingExportData(false);
         }
     }
@@ -197,11 +256,20 @@ export function TplModal({ btn }: { btn: { name: string } }) {
                                 )}
                                 <TableCell align="center" className="border">{period.time}</TableCell>
                                 {period.pairs.map((pair, pairIndex) => (
-                                    <TableCell key={`${rowIndex}-${periodIndex}-${pairIndex}`} className="border">
-                                        <div className="flex flex-col">
-                                            <span>{pair.brother}&nbsp;</span>
-                                            <span>{pair.support}</span>
+                                    <TableCell key={`${rowIndex}-${periodIndex}-${pairIndex}`} className="border  ">
+                                        <div className="flex flex-row flex-1 items-center justify-between   gap-4">
+
+                                            <div className="flex flex-col">
+                                                <span>{pair.brother}&nbsp;</span>
+                                                <span>{pair.support} </span>
+                                            </div>
+
+                                            <Button type="button" variant={'ghost'} disabled={!!generationPairId || !pair?.id} onClick={() => { generateNewPair(pair?.id) }} title="Atualizar Dupla" className={`group ${!!generationPairId && generationPairId === pair.id && 'animate-spin font-semibold'} px-2 refresh_pair disabled:opacity-60 disabled:cursor-none`}>
+                                                <UpdateIcon className={` cursor-pointer group-hover:rotate-90 duration-150 text-blue-500 w-4 h-4`} />
+                                            </Button>
+
                                         </div>
+
                                     </TableCell>
                                 ))}
 
@@ -237,8 +305,8 @@ export function TplModal({ btn }: { btn: { name: string } }) {
                         </div>
                         <div className="overflow-y-auto max-h-[calc(100vh-300px)]">
                             {
-                                isRefetching ?
-                                    <div className="w-full h-full flex justify-center items-center  flex-col gap-2 animate-pulse"><ThreeDot color="#2563eb " size="medium" text="" textColor="" /> <div className="text-sm text-blue-500">Carregando lista</div></div> :
+                                isGenerating || isRefetching ?
+                                    <div className="w-full h-full flex justify-center items-center  flex-col gap-2 animate-pulse"><ThreeDot color="#2563eb " size="medium" text="" textColor="" /> <div className="text-sm text-blue-500">{isGenerating ? "Gerando" : "Carregando"} lista</div></div> :
                                     <TableTPL ref={tableRef} id="export-content" data={data} />
                             }
 
@@ -247,18 +315,18 @@ export function TplModal({ btn }: { btn: { name: string } }) {
                     <DialogFooter className="flex md:items-center md:justify-center flex-col gap-2 md:flex-row">
                         <div className="flex flex-col gap-2">
                             <div className=" flex flex-1">
-                                <DatePickerWithRange initial_date={dates_state.initial_date} final_date={dates_state.final_date} onChange={onChangeDate} />
+                                <DatePickerWithRange disabled={isGenerating || isRefetching || IsLoadingExportData} initial_date={dates_state.initial_date} final_date={dates_state.final_date} onChange={onChangeDate} />
                             </div>
 
                             <div className="flex flex-col w-full md:flex-row gap-2">
-                                <Button type="button" disabled={IsLoadingExportData} onClick={generateNewList} className="bg-blue-500 hover:bg-blue-700 disabled:opacity-20">
+                                <Button type="button" disabled={IsLoadingExportData || isGenerating || isRefetching} onClick={generateNewList} className="bg-blue-500 hover:bg-blue-700 disabled:opacity-20">
                                     Gerar nova lista
                                 </Button>
-                                <Button type="button" disabled={IsLoadingExportData} onClick={generatePDF} className="bg-red-500 hover:bg-red-700 disabled:opacity-20">
+                                <Button type="button" disabled={IsLoadingExportData || isGenerating || isRefetching} onClick={generatePDF} className="bg-red-500 hover:bg-red-700 disabled:opacity-20">
                                     Download PDF
                                     <DownloadIcon />
                                 </Button>
-                                <Button type="button" disabled={IsLoadingExportData} onClick={exportToExcel} className="bg-green-500 hover:bg-green-700 disabled:opacity-20">
+                                <Button type="button" disabled={IsLoadingExportData || isGenerating || isRefetching} onClick={exportToExcel} className="bg-green-500 hover:bg-green-700 disabled:opacity-20">
                                     Download XLSX
                                     <DownloadIcon />
                                 </Button>
