@@ -22,6 +22,7 @@ import { DateRange } from "react-day-picker"
 import * as XLSX from "xlsx-js-style";
 import { DownloadIcon, UpdateIcon } from "@radix-ui/react-icons";
 import { ThreeDot } from 'react-loading-indicators'
+import { toast } from "@/hooks/use-toast";
 
 
 
@@ -78,6 +79,16 @@ export function TplModal({ btn }: { btn: { name: string } }) {
         setGenerationPairId(tpl_event_id)
         const new_event = await generateEvents({ event_id: tpl_event_id, initial_date: dates_state.initial_date, final_date: dates_state.final_date })
 
+        if (!new_event || new_event?.length == 0) {
+            toast({
+                title: "Não foi possível gerar novas duplas para este dia!",
+                description: "Filtre o dia desejado e gere a lista completa.",
+                className: 'bg-slate-900 border-none text-white',
+            })
+            setGenerationPairId(undefined)
+            return
+        }
+
         const new_pair = new_event[0].periods[0].pairs[0]
 
         const event_selected_index = data?.findIndex(x =>
@@ -109,7 +120,10 @@ export function TplModal({ btn }: { btn: { name: string } }) {
                     : period
             )
         };
-
+        toast({
+            title: "Dupla gerada com sucesso!",
+            className: 'bg-green-500 border-none text-white',
+        })
         queryClient.setQueriesData(['tpl_events'], updatedData);
         setGenerationPairId(undefined)
     }
