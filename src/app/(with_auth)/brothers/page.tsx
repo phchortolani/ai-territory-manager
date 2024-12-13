@@ -13,8 +13,8 @@ import { ThreeDot } from "react-loading-indicators"
 
 
 export default function BrothersPage() {
-    const { data, isLoading, isError, isRefetching } = useQuery({ queryFn: async () => await getBrothers(), queryKey: ["brothers"] });
-    const { data: tpl_times } = useQuery({ queryFn: async () => await getTimes(), queryKey: ["tpl_times"] });
+    const { data, isLoading, isError, isRefetching } = useQuery({ queryFn: async () => await getBrothers(), queryKey: ["brothers"], refetchOnWindowFocus: false });
+    const { data: tpl_times } = useQuery({ queryFn: async () => await getTimes(), queryKey: ["tpl_times"], refetchOnWindowFocus: false });
     if (isLoading) return <div>
         <div className="w-full h-full flex justify-center items-center  flex-col gap-2 animate-pulse">
             <ThreeDot color="#2563eb " size="medium" text="" textColor="" /> <div className="text-sm text-blue-500">Carregando</div>

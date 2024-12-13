@@ -79,6 +79,7 @@ export function TplModal({ btn }: { btn: { name: string } }) {
         setGenerationPairId(tpl_event_id)
         const new_event = await generateEvents({ event_id: tpl_event_id, initial_date: dates_state.initial_date, final_date: dates_state.final_date })
 
+
         if (!new_event || new_event?.length == 0) {
             toast({
                 title: "Não foi possível gerar novas duplas para este dia!",
