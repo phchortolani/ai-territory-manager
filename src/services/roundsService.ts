@@ -24,6 +24,20 @@ export async function getRoundsByStatus(status?: EStatus_territory | null | unde
     }
 }
 
+export async function getRoundsByUID(uid: string): Promise<RoundsDto[]> {
+    try {
+        const response = (await ApiClient().get(controller + `/schedule/roundsByUID/${uid}`))
+
+        if (response.status === 200 && response.data) return response.data
+        else {
+            throw { error: response.data?.error || 'Erro desconhecido' };
+        }
+    } catch (error) {
+        const err = error as AxiosError<{ error: string }>;
+        throw { error: err.response?.data?.error || 'Erro de conexão ou outro erro inesperado' };
+    }
+}
+
 
 export async function MarkRoundAsDone(round: RoundsDto, status: number) {
     'use client'
