@@ -6,5 +6,6 @@ export interface RoundsDto {
     leader: string;
     campaign?: string;
     status?: string;
-    territory_id: number
+    territory_id: number,
+    uid?: string
 }

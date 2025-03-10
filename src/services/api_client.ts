@@ -10,7 +10,7 @@ export function ApiClient() {
         baseURL: process.env.NEXT_PUBLIC_API_URL,
         headers: {
             Authorization: token ? `Bearer ${token}` : undefined
-        }
+        },
     })
     return axiosInstance
 }

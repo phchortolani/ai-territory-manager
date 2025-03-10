@@ -13,59 +13,62 @@ import {
     isSameDay,
     isSameMonth,
     isToday,
-    isTuesday,
     parse,
     parseISO,
     startOfToday,
     startOfWeek
 } from 'date-fns'
 import { useEffect, useState } from 'react'
-import { useForm, SubmitHandler } from "react-hook-form"
-import { ms, ptBR } from 'date-fns/locale'
+import { useForm } from "react-hook-form"
+import { ptBR } from 'date-fns/locale'
 import { RoundsDto } from '@/dtos/roundsDto'
 import { EStatus_territory } from '@/enums/status_territory'
 import { SimpleButton } from '@/components/buttons/simple_button'
-import { getRoundsByStatus, MarkRoundAsDone, Schedule } from '@/services/roundsService'
+import { DeleteRound, getRoundsByStatus, MarkRoundAsDone, Schedule } from '@/services/roundsService'
 import { useRouter } from 'next/navigation'
 import { getLeaders } from '@/services/scheduleService'
-import { Leaders } from '@/models/leaders'
 import { z } from "zod"
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ISchedule } from '@/dtos/schedule'
-import { Router } from 'next/router'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ThreeDot } from 'react-loading-indicators'
-
+import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { DialogTitle } from '@radix-ui/react-dialog'
+import { Pencil1Icon, PlusIcon, TrashIcon } from '@radix-ui/react-icons'
+import { toast } from '@/hooks/use-toast'
 
 
 
 function classNames(...classes: any[]) {
     return classes.filter(Boolean).join(' ')
 }
-/* 
-type props = {
-    schedule: RoundsDto[]
-}
- */
+
 
 const schema = z.object({
-    leader_id: z.string().optional(),
-    repeat_next_week: z.boolean().optional()
+    leader_id: z.number(),
+    repeat_next_week: z.boolean().optional().default(false),
 }).required()
 
 export default function Calendar() {
     let today = startOfToday();
-    const router = useRouter()
+    const queryClient = useQueryClient()
     const [modalOpen, setOpenModal] = useState<boolean>(false)
     const [loading, setLoading] = useState<boolean>(false)
-    const [leaders, setLeaders] = useState<Leaders[]>()
     const [selectedDay, setSelectedDay] = useState(today)
     const [currentMonth, setCurrentMonth] = useState(format(today, 'MMM-yyyy'))
     const [edit, setEdit] = useState<boolean>(false)
     const [msg, setMsg] = useState<string>("")
+    const [isDeleting, setIsDeleting] = useState<boolean>(false)
 
-    const { data: schedule, isLoading, refetch } = useQuery({ queryFn: async () => await getRoundsByStatus(), queryKey: ["getRoundsByStatus"], refetchOnWindowFocus: false });
-
+    const { data: schedule, isLoading, refetch } = useQuery({ queryFn: async () => await getRoundsByStatus(), queryKey: ["getRoundsByStatus"], cacheTime: 10000, refetchOnWindowFocus: false });
+    const { data: leaders } = useQuery({
+        queryFn: async () => await getLeaders(),
+        queryKey: ["getLeaders"],
+        refetchOnWindowFocus: false,
+        cacheTime: 10000,
+    });
 
 
     let firstDayCurrentMonth = parse(currentMonth, 'MMM-yyyy', new Date())
@@ -111,7 +114,10 @@ export default function Calendar() {
 
         leaders.forEach(leader => {
             const roundsofleader = selectedDayRounds?.filter(x => x.leader === leader)
-            if (!rounds_by_leaders.some(x => x.leader == leader)) rounds_by_leaders.push({ leader, rounds: roundsofleader ? roundsofleader?.sort((a, b) => a.territory_id - b.territory_id) : [] })
+            if (!rounds_by_leaders.some(x => x.leader == leader)) rounds_by_leaders.push({
+                leader,
+                rounds: roundsofleader ? roundsofleader?.sort((a, b) => a.territory_id - b.territory_id) : []
+            })
         })
 
         return rounds_by_leaders
@@ -120,16 +126,11 @@ export default function Calendar() {
     const rounds_by_leaders = generateListOfRoundsByLeader(selectedDayRounds || [])
 
     async function OpenSchedule() {
-        const leaders = await getLeaders()
-
-        if (leaders) {
-            setLeaders(leaders)
-            setOpenModal(true)
-        }
+        setOpenModal(true)
 
     }
 
-    const { register, handleSubmit, formState: { errors }, } = useForm<ISchedule>({ resolver: zodResolver(schema) })
+    const { register, handleSubmit, formState: { errors }, getValues, setValue } = useForm<ISchedule>({ resolver: zodResolver(schema) })
 
     async function submit(schedule: ISchedule) {
         setLoading(true)
@@ -142,7 +143,38 @@ export default function Calendar() {
 
     function CloseModal() {
         setOpenModal(false)
-        refetch()
+        queryClient.invalidateQueries({ queryKey: ["getRoundsByStatus"] })
+        setMsg("")
+    }
+
+    async function handleDeleteRound() {
+        setIsDeleting(true)
+        const uid = rounds_by_leaders[0]?.rounds[0]?.uid
+        if (!uid) return setIsDeleting(false)
+        await DeleteRound(uid).then(result => {
+            if (result) {
+                toast({
+                    title: "Sucesso",
+                    description: "Agendamento excluído com sucesso",
+                    className: 'bg-green-500 text-white',
+                })
+            } else {
+                toast({
+                    title: "Erro",
+                    className: 'bg-red-500 text-white',
+                    description: "Erro ao excluir agendamento",
+                })
+            }
+            setIsDeleting(false)
+        }).catch(x => {
+            toast({
+                title: "Erro",
+                className: 'bg-red-500 text-white',
+                description: "Erro ao excluir agendamento",
+            })
+        }).finally(() => {
+            queryClient.invalidateQueries({ queryKey: ["getRoundsByStatus"] })
+        })
     }
 
     useEffect(() => {
@@ -157,41 +189,38 @@ export default function Calendar() {
         </div>
     </div>
 
+    const AgendarBtn = ({ size }: { size?: "lg" | "sm" | "default" | "icon" | null | undefined }) => <div className='flex flex-col gap-2'>
+        <Button size={size} className='w-full md:w-max' onClick={OpenSchedule} >
+            <PlusIcon className='w-4 h-4' /> {rounds_by_leaders?.length > 0 ? 'Agendar mais' : 'Agendar'}
+        </Button>
+    </div>
+
     return (
-        <div>
-            <dialog className='w-screen h-screen fixed z-50 bg-gray-400/30 top-0 overflow-hidden' open={modalOpen}>
-                <div className='md:h-[calc(100%-2rem)] flex  h-full md:mx-8 md:my-2 absolute w-full md:w-[calc(100%-4rem)] p-4 bg-white rounded-md shadow-lg flex-col gap-2 justify-between'>
-                    <div className='flex flex-row w-full justify-between'>
-                        <div className='text-lg'>
-                            Agendamento
-                        </div>
-                        <div>
-                            <div onClick={CloseModal} className='cursor-pointer hover:invert'>
-                                ❌
-                            </div>
-                        </div>
-                    </div>
-                    <hr></hr>
+        <div className='min-w-full'>
+            <Dialog open={modalOpen} onOpenChange={CloseModal}>
+
+                <DialogContent className="max-w-[600px] ">
+                    <DialogHeader>
+                        <DialogTitle className='text-lg font-medium'>Agendar</DialogTitle>
+                    </DialogHeader>
                     <form className='flex-1' action='post' method='POST' onSubmit={handleSubmit(submit)}>
                         <div className='flex flex-col justify-between h-full gap-2'>
                             <div className='flex flex-col flex-1 gap-2'>
                                 <label htmlFor='leader'>Dirigente</label>
-                                <select
-                                    {...register('leader_id')}
-                                    name='leader_id'
-                                    className='border rounded-md p-2 focus:border-blue-400 outline-blue-400'>
-                                    {leaders?.map(x => <option value={x.id} key={x.id}>{x.id} - {x.name}</option>)}
-                                </select>
+                                <Select {...register("leader_id")} onValueChange={(value) => setValue('leader_id', Number(value))}>
+                                    <SelectTrigger className="w-full" >
+                                        <SelectValue placeholder="Selecione..." />
+                                    </SelectTrigger>
+                                    <SelectContent  >
+                                        {leaders?.map(x => <SelectItem value={x?.id.toString()} key={x.id}>{x.id} - {x.name}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
                                 {msg && <div className='p-2 flex bg-slate-200 rounded-md shadow-sm font-mono gap-2 '><b>Agendamento:</b>
-                                    <pre dangerouslySetInnerHTML={{ __html: msg }}>
-
-                                    </pre>
+                                    <pre dangerouslySetInnerHTML={{ __html: msg }}></pre>
                                 </div>}
-
-
                             </div>
 
-                            <div className='mt-2 '>
+                            {/*         <div className='mt-2 '>
                                 <div className='flex flex-row gap-2 items-center'>
                                     <input type='checkbox'
                                         {...register('repeat_next_week')}
@@ -200,25 +229,22 @@ export default function Calendar() {
                                     <span>Repetir Semana</span>
                                 </div>
 
-                            </div>
+                            </div> */}
                             <hr></hr>
                             <div>
 
-                                <SimpleButton type='submit' loading={{ isLoading: loading, message: 'Agendando' }} className='w-full md:w-auto' typeBtn='primary'>
-                                    Gerar
-                                </SimpleButton>
+                                <Button disabled={loading} type="submit" className='w-full md:w-auto disabled:cursor-not-allowed disabled:opacity-50'>
+                                    {loading ? 'Agendando...' : 'Agendar'}
+                                </Button>
                             </div>
                         </div>
 
                     </form>
-
-
-
-                </div>
-            </dialog >
-            <div className="max-w-md px-4 sm:px-7 md:max-w-4xl md:px-6">
-                <div className="md:grid md:grid-cols-2 md:divide-x md:divide-gray-200">
-                    <div className="md:pr-14">
+                </DialogContent>
+            </Dialog>
+            <div className="px-4 sm:px-7 min-w-full   md:px-6 md:min-w-[calc(100vw-200px)]">
+                <div className="md:grid md:grid-cols-2 max-w-4xl md:divide-x md:divide-gray-200 mx-auto container">
+                    <div className="md:mr-4 md:max-w-md lg:max-w-lg">
                         <div className="flex items-center">
                             <h2 className="flex-auto font-semibold text-gray-900">
                                 {format(firstDayCurrentMonth, 'MMMM yyyy', { locale: ptBR })}
@@ -296,8 +322,7 @@ export default function Calendar() {
                                                     {checkStatus(day)}
                                                 </div>
                                             ) : <>
-                                                {(isMonday(day) || isTuesday(day)) ? <VideoCameraIcon className={`w-5 h-5 p-1 text-white rounded-full bg-blue-300/50`} />
-                                                    : <XCircleIcon className={`w-5 h-5 text-white rounded-full bg-gray-300/50`} />}
+                                                {(isMonday(day)) ? <VideoCameraIcon className={`w-5 h-5 p-1 text-white rounded-full bg-blue-300/50`} /> : <XCircleIcon className={`w-5 h-5 text-white rounded-full bg-gray-300/50`} />}
 
                                             </>}
                                     </div>
@@ -305,7 +330,7 @@ export default function Calendar() {
                             ))}
                         </div>
                     </div>
-                    <section className="mt-12 md:mt-0 md:pl-14">
+                    <section className="mt-12 md:mt-0 md:pl-4 w-full">
                         <h2 className="font-semibold text-gray-900">
                             Agendamento para{' '}
                             <time dateTime={format(selectedDay, 'dd-MM-yyyy', { locale: ptBR })}>
@@ -314,51 +339,48 @@ export default function Calendar() {
                             {rounds_by_leaders[0]?.rounds[0]?.campaign && <div className='text-sm text-gray-400'>{rounds_by_leaders[0].rounds[0].campaign}</div>}
                         </h2>
                         <ol className="mt-4 space-y-1 text-sm leading-6 text-gray-500">
+
                             {
-                                rounds_by_leaders.length > 0 && <div className='flex justify-end border-b'>
+                                rounds_by_leaders?.length > 0 && <div className='md:flex w-full md:justify-end border-b'>
                                     {edit ?
-                                        <SimpleButton onClick={() => setEdit(false)} typeBtn='secondary' className='mb-2'>
-                                            <div className='flex flex-row gap-2 justify-between items-center'><ArrowDownCircleIcon className='w-5 h-5' /> Fechar edição</div>
-                                        </SimpleButton>
-                                        : <div className='flex flex-row gap-2'>
-                                            <SimpleButton onClick={() => setEdit(true)} typeBtn='secondary' className='border-none mb-2'>Editar</SimpleButton>
+                                        <Button onClick={() => setEdit(false)} type='button' size={'sm'} className='mb-2 w-full md:w-max bg-blue-500 text-white hover:bg-blue-600'>
+                                            <div className='flex flex-row gap-2 justify-between items-center'><XCircleIcon className='w-5 h-5' />Fechar edição</div>
+                                        </Button>
+                                        : <div className='flex flex-col md:flex-row gap-2'>
+                                            <Button disabled={isDeleting} onClick={() => handleDeleteRound()} type='button' size={'sm'} className='mb-2  w-full md:w-max bg-red-500 text-white hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed' >
+                                                <div className='flex flex-row gap-2 justify-between items-center'><TrashIcon className='w-5 h-5' />{isDeleting ? 'Excluindo...' : 'Excluir'}</div>
+                                            </Button>
+                                            <Button onClick={() => setEdit(true)} type='button' size={'sm'} className='mb-2  w-full md:w-max bg-blue-500 text-white hover:bg-blue-600' >
+                                                <div className='flex flex-row gap-2 justify-between items-center'><Pencil1Icon className='w-5 h-5' />Editar</div>
+                                            </Button>
+
+                                            <AgendarBtn size={'sm'} />
                                         </div>
                                     }
                                 </div>
                             }
 
+                            {rounds_by_leaders?.length === 0 && <AgendarBtn size={'default'} />}
 
-                            {rounds_by_leaders.length > 0 ? rounds_by_leaders.map(x =>
-                                <div key={x.leader} className='border-b  p-2 '>
-                                    <p className="text-gray-900 font-semibold capitalize">{x.leader.toLocaleLowerCase()}</p>
-                                    <p className="mt-0.5">
-                                        <time dateTime={x.rounds[0].first_day.toString()}>
-                                            {format(x.rounds[0].first_day, 'dd/MM/yyyy')}
-                                        </time>{' '}
-                                        -{' '}
-                                        <time dateTime={x.rounds[0].last_day?.toString() ?? x.rounds[0].first_day.toString()}>
-                                            {format(x.rounds[0]?.last_day ?? x.rounds[0].first_day, 'dd/MM/yyyy')}
-                                        </time>
-                                    </p>
-                                    {x.rounds.map((round: any) => (
-                                        <Round key={round.id} round={round} edit={edit} refetch={refetch} />
-                                    ))}
-                                </div>
+                            {
+                                rounds_by_leaders?.map(x =>
+                                    <div key={x.leader} className='border-b  p-2 '>
+                                        <p className="text-gray-900 font-semibold capitalize">{x.leader.toLocaleLowerCase()}</p>
+                                        <p className="mt-0.5">
+                                            <time dateTime={x.rounds[0].first_day.toString()}>
+                                                {format(x.rounds[0].first_day, 'dd/MM/yyyy')}
+                                            </time>{' '}
+                                            -{' '}
+                                            <time dateTime={x.rounds[0].last_day?.toString() ?? x.rounds[0].first_day.toString()}>
+                                                {format(x.rounds[0]?.last_day ?? x.rounds[0].first_day, 'dd/MM/yyyy')}
+                                            </time>
+                                        </p>
+                                        {x.rounds.map((round: any) => (
+                                            <Round key={round.id} round={round} edit={edit} refetch={refetch} />
+                                        ))}
+                                    </div>)
+                            }
 
-                            ) : (
-                                <>
-                                    {isMonday(selectedDay) ? <>
-                                        Não é possível agendar em dias que o campo é somente pelo ZOOM.</> :
-                                        <div className='flex flex-col gap-2'>
-                                            <p>Nenhum território agendado para este dia.</p>
-                                            <SimpleButton onClick={OpenSchedule} typeBtn='primary'>
-                                                Agendar
-                                            </SimpleButton>
-                                        </div>
-                                    }
-
-                                </>
-                            )}
                         </ol>
                     </section>
                 </div>

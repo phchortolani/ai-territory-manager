@@ -24,6 +24,12 @@ export async function getRoundsByStatus(status?: EStatus_territory | null | unde
     }
 }
 
+export async function DeleteRound(uid: string) {
+    return await ApiClient().delete<boolean>(controller + `/schedule/${uid}`).then(result => {
+        return result
+    }).catch(x => console.log(x))
+}
+
 export async function getRoundsByUID(uid: string): Promise<RoundsDto[]> {
     try {
         const response = (await ApiClient().get(controller + `/schedule/roundsByUID/${uid}`))
