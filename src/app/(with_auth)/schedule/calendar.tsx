@@ -134,7 +134,12 @@ export default function Calendar() {
 
     async function submit(schedule: ISchedule) {
         setLoading(true)
-        await Schedule({ ...schedule, first_day: selectedDay })
+        await Schedule({
+            ...schedule,
+            first_day: selectedDay,
+            not_use_ia: true,
+            notificar_whatsapp: false,
+        })
             .then(response => {
                 if (response)
                     setMsg(response)
