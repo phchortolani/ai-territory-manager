@@ -137,8 +137,9 @@ export default function Calendar() {
         await Schedule({
             ...schedule,
             first_day: selectedDay,
-            not_use_ia: true,
+            not_use_ia: false,
             notificar_whatsapp: false,
+            repeat_next_week: false
         })
             .then(response => {
                 if (response)
