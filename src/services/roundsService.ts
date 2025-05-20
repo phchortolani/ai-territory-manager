@@ -5,7 +5,9 @@ import { EStatus_territory } from "@/enums/status_territory";
 import { ApiClient } from "./api_client";
 import { S13 } from "@/dtos/s13";
 import { ISchedule } from "@/dtos/schedule";
-import { AxiosError } from "axios";
+import { AxiosError, AxiosResponse } from "axios";
+import { WeekAndTerritoryDTO } from "@/dtos/weekAndTerritoryDto";
+import { useQuery } from "@tanstack/react-query";
 
 const controller = 'rounds'
 
@@ -67,6 +69,25 @@ export async function getS13(): Promise<S13[]> {
 }
 
 
+
+export function useHeatMapWeekAndTerritory() {
+
+    let AxiosErrorResponse: AxiosResponse<unknown, WeekAndTerritoryDTO[]> | undefined;
+
+    const query = useQuery({
+        queryKey: ['useHeatMapWeekAndTerritory'],
+        queryFn: async () => await ApiClient().get<WeekAndTerritoryDTO[]>(controller + `/heatmap/weekly`).then((response) => response.data),
+        retry: false,
+    });
+
+    if (query.isError) {
+        const axiosrror: AxiosError = query.error as AxiosError;
+        AxiosErrorResponse = axiosrror.response;
+
+    }
+
+    return { query, AxiosErrorResponse };
+}
 
 
 export async function Schedule(schedule: ISchedule) {

@@ -16,8 +16,8 @@ export default function Navbar({ children }: { children: React.ReactNode }) {
     const { signOut, user } = useAuth()
     const [navigation, setNavigation] = useState(
         [
+            { name: 'Dashboard', href: 'dashboard', current: false },
             { name: 'Calendário', href: 'schedule', current: true },
-            /*    { name: 'Saídas', href: 'saida', current: false }, */
             { name: 'Territórios', href: 'territories', current: false },
             { name: 'Download', href: 'downloads', current: false },
             { name: 'TPL', href: 'brothers', current: false },
