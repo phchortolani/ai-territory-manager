@@ -47,7 +47,7 @@ export default function TabelaHeatmapTerritorios() {
     return (
         <Card className="w-full overflow-auto">
             <CardHeader>
-                <CardTitle>Heatmap: Frequência de Trabalho por Território</CardTitle>
+                <CardTitle>Frequência de Trabalho por Território</CardTitle>
             </CardHeader>
             <CardContent>
                 {/* Tabela tradicional - visível em telas médias e maiores */}
