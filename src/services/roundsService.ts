@@ -9,6 +9,7 @@ import { AxiosError, AxiosResponse } from "axios";
 import { WeekAndTerritoryDTO } from "@/dtos/weekAndTerritoryDto";
 import { useQuery } from "@tanstack/react-query";
 import { RankRoundCompleted } from "@/dtos/roundCompleted";
+import { vw_effectiveness } from "@/dtos/vw_effectiveness";
 
 const controller = 'rounds'
 
@@ -99,6 +100,26 @@ export function useRankRoundCompleted() {
     const query = useQuery({
         queryKey: ['useRankRoundCompleted'],
         queryFn: async () => await ApiClient().get<RankRoundCompleted[]>(controller + `/roundCompleted`).then((response) => response.data),
+        retry: false,
+        keepPreviousData: true
+    });
+
+    if (query.isError) {
+        const axiosrror: AxiosError = query.error as AxiosError;
+        AxiosErrorResponse = axiosrror.response;
+
+    }
+
+    return { query, AxiosErrorResponse };
+}
+
+export function useEffectiveness() {
+
+    let AxiosErrorResponse: AxiosResponse<unknown, vw_effectiveness[]> | undefined;
+
+    const query = useQuery({
+        queryKey: ['useEffectiveness'],
+        queryFn: async () => await ApiClient().get<vw_effectiveness[]>(controller + `/effectiveness`).then((response) => response.data),
         retry: false,
         keepPreviousData: true
     });

@@ -1,4 +1,5 @@
 'use client'
+import EffectivenessBarChart from "@/components/dash/effectivenessBarChart";
 import RankRoundBarChart from "@/components/dash/rankRoundBarChart";
 import TabelaHeatmapTerritorios from "@/components/dash/territoryHeatMap";
 import PieChartTerritorios from "@/components/dash/territoryPieChart";
@@ -24,10 +25,12 @@ export function DashComponent() {
             <PieChartTerritorios data={data} type="less_work" pieces={5} />
             <WeekRadarChart data={data} />
             <RankRoundBarChart top={isMobile ? 10 : 25} />
+
         </div>
         {/* <>
             <TerritoryBarChart data={data} />
         </> */}
+                    <EffectivenessBarChart />
         <TabelaHeatmapTerritorios data={data} />
     </div>
 }
