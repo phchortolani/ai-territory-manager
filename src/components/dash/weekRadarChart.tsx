@@ -1,34 +1,53 @@
-"use client";
+'use client'
 
 import {
-    Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer, Tooltip
-} from "recharts";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { WeekAndTerritoryDTO } from "@/dtos/weekAndTerritoryDto";
-import { useState } from "react";
-import { Select } from "@/components/ui/select";
+    Radar,
+    RadarChart,
+    PolarGrid,
+    PolarAngleAxis,
+    ResponsiveContainer,
+    Tooltip,
+} from 'recharts'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { WeekAndTerritoryDTO } from '@/dtos/weekAndTerritoryDto'
+import { useState } from 'react'
+import Image from 'next/image'
 import {
+    Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select'
 
-type DiaSemana = "segunda" | "terca" | "quarta" | "quinta" | "sexta" | "sabado" | "domingo";
+type DiaSemana =
+    | 'segunda'
+    | 'terca'
+    | 'quarta'
+    | 'quinta'
+    | 'sexta'
+    | 'sabado'
+    | 'domingo'
 
 const dias: DiaSemana[] = [
-    "segunda", "terca", "quarta", "quinta", "sexta", "sabado", "domingo",
-];
+    'segunda',
+    'terca',
+    'quarta',
+    'quinta',
+    'sexta',
+    'sabado',
+    'domingo',
+]
 
 const formatDia = (dia: DiaSemana) =>
-    dia.charAt(0).toUpperCase() + dia.slice(1);
+    dia.charAt(0).toUpperCase() + dia.slice(1)
 
 interface Props {
-    data: WeekAndTerritoryDTO[] | undefined;
+    data: WeekAndTerritoryDTO[] | undefined
 }
 
 export default function WeekRadarChart({ data }: Props) {
-    const [territorioSelecionado, setTerritorioSelecionado] = useState<string>("todos");
+    const [territorioSelecionado, setTerritorioSelecionado] = useState<string>('todos')
 
     if (!data || data.length === 0) {
         return (
@@ -36,13 +55,16 @@ export default function WeekRadarChart({ data }: Props) {
                 <CardHeader>
                     <CardTitle>Dia mais trabalhado</CardTitle>
                 </CardHeader>
-                <CardContent className="text-sm text-gray-500">Nenhum dado disponível.</CardContent>
+                <CardContent className="text-sm text-gray-500">
+                    Nenhum dado disponível.
+                </CardContent>
             </Card>
-        );
+        )
     }
 
-    // Prepara opções únicas de territórios para o select
-    const territoriosUnicos = Array.from(new Set(data.map((d) => d.territorio))).sort((a, b) => a - b);
+    const territoriosUnicos = Array.from(new Set(data.map((d) => d.territorio))).sort(
+        (a, b) => a - b
+    )
 
     const totalPorDia: Record<DiaSemana, number> = {
         segunda: 0,
@@ -52,22 +74,23 @@ export default function WeekRadarChart({ data }: Props) {
         sexta: 0,
         sabado: 0,
         domingo: 0,
-    };
+    }
 
-    const dadosFiltrados = territorioSelecionado === "todos"
-        ? data
-        : data.filter(d => `T${d.territorio}` === territorioSelecionado);
+    const dadosFiltrados =
+        territorioSelecionado === 'todos'
+            ? data
+            : data.filter((d) => `T${d.territorio}` === territorioSelecionado)
 
     dadosFiltrados.forEach((territorio) => {
         dias.forEach((dia) => {
-            totalPorDia[dia] += Number(territorio[dia]) || 0;
-        });
-    });
+            totalPorDia[dia] += Number(territorio[dia]) || 0
+        })
+    })
 
     const radarData = dias.map((dia) => ({
         dia: formatDia(dia),
         total: totalPorDia[dia],
-    }));
+    }))
 
     return (
         <Card>
@@ -75,19 +98,22 @@ export default function WeekRadarChart({ data }: Props) {
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                     <CardTitle>Distribuição por dia da semana</CardTitle>
 
-                    <Select value={territorioSelecionado} onValueChange={(value) => setTerritorioSelecionado(value)}>
+                    <Select value={territorioSelecionado} onValueChange={setTerritorioSelecionado}>
                         <SelectTrigger className="w-48 outline-none focus-within:outline-none focus-within:ring-1 focus-within:ring-ring">
                             <SelectValue placeholder="Selecione o território" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="todos">Todos</SelectItem>
                             {territoriosUnicos.map((t) => (
-                                <SelectItem key={t} value={`T${t}`}>T{t}</SelectItem>
+                                <SelectItem key={t} value={`T${t}`}>
+                                    T{t}
+                                </SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
                 </div>
             </CardHeader>
+
             <CardContent>
                 <div className="w-full h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
@@ -105,7 +131,20 @@ export default function WeekRadarChart({ data }: Props) {
                         </RadarChart>
                     </ResponsiveContainer>
                 </div>
+
+                {/* Imagem do território selecionado */}
+                {territorioSelecionado !== 'todos' && (
+                    <div className="w-full mt-4 flex justify-center">
+                        <Image
+                            src={`/${territorioSelecionado.replace('T', '')}.png`}
+                            alt={`Território ${territorioSelecionado}`}
+                            width={400}
+                            height={400}
+                            className="rounded shadow-md max-h-[400px] object-contain"
+                        />
+                    </div>
+                )}
             </CardContent>
         </Card>
-    );
+    )
 }
