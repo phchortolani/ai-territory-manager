@@ -8,6 +8,7 @@ import { ISchedule } from "@/dtos/schedule";
 import { AxiosError, AxiosResponse } from "axios";
 import { WeekAndTerritoryDTO } from "@/dtos/weekAndTerritoryDto";
 import { useQuery } from "@tanstack/react-query";
+import { RankRoundCompleted } from "@/dtos/roundCompleted";
 
 const controller = 'rounds'
 
@@ -77,6 +78,27 @@ export function useHeatMapWeekAndTerritory() {
     const query = useQuery({
         queryKey: ['useHeatMapWeekAndTerritory'],
         queryFn: async () => await ApiClient().get<WeekAndTerritoryDTO[]>(controller + `/heatmap/weekly`).then((response) => response.data),
+        retry: false,
+        keepPreviousData: true
+    });
+
+    if (query.isError) {
+        const axiosrror: AxiosError = query.error as AxiosError;
+        AxiosErrorResponse = axiosrror.response;
+
+    }
+
+    return { query, AxiosErrorResponse };
+}
+
+
+export function useRankRoundCompleted() {
+
+    let AxiosErrorResponse: AxiosResponse<unknown, RankRoundCompleted[]> | undefined;
+
+    const query = useQuery({
+        queryKey: ['useRankRoundCompleted'],
+        queryFn: async () => await ApiClient().get<RankRoundCompleted[]>(controller + `/roundCompleted`).then((response) => response.data),
         retry: false,
         keepPreviousData: true
     });
