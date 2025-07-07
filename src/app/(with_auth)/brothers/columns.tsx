@@ -126,7 +126,7 @@ export const columns: ColumnDef<Brother>[] = [
                     onEnd: () => setIsLoading(false)
                 })
             }
-            return <div className="max-w-sm">
+            return <div className="min-w-full md:max-w-sm">
                 <Select2 isDisabled={isLoading} options={options?.filter(x => x.value !== row.original.brother_name)} defaultValue={defaultOptions} onChange={onChange} />
             </div>
         },
@@ -165,7 +165,7 @@ export const columns: ColumnDef<Brother>[] = [
                     onEnd: () => setIsLoading(false)
                 })
             }
-            return <div className="max-w-sm">
+            return <div className="min-w-full md:max-w-sm">
                 <Select2 isDisabled={isLoading} options={options} defaultValue={options_default} onChange={onChange} />
             </div>
         },
@@ -180,7 +180,6 @@ export const columns: ColumnDef<Brother>[] = [
             async function invalidateQueries() {
                 queryClient.invalidateQueries({ queryKey: ["brothers"] })
             }
-
             return <div className="text-center">
                 <Checkbox
                     disabled={isLoading}

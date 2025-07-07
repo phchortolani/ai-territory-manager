@@ -41,7 +41,7 @@
     "react-loading-indicators": "^1.0.0",
     "react-select": "^5.8.1",
     "react-to-pdf": "^1.0.1",
-    "recharts": "^2.15.3",
+    "recharts": "^2.15.4",
     "tailwind-merge": "^2.5.3",
     "tailwindcss-animate": "^1.0.7",
     "xlsx": "^0.18.5",

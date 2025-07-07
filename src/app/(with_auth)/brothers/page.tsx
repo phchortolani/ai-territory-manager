@@ -21,9 +21,8 @@ export default function BrothersPage() {
         </div>
     </div>
     if (isError) return <div>Falha ao carregar</div>
-
     return (
-        <div className="container mx-auto px-1 md:p-0">
+        <div className="mx-auto px-1 md:p-0">
             <div className="flex flex-row gap-2">
                 <BrotherModal btn={{ name: "Adicionar" }} />
                 <TplModal btn={{ name: "Gerar TPL" }} />

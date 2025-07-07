@@ -185,7 +185,7 @@ export default function Navbar({ children }: { children: React.ReactNode }) {
                     </div>
                 </header>
                 <main>
-                    <div className='grid justify-center pt-4'>{children}</div>
+                    <div className='grid md:justify-center pt-4'>{children}</div>
                 </main>
             </div>
         </>
