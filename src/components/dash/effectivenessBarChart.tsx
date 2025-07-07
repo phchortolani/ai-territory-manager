@@ -23,11 +23,13 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
+import { useIsMobile } from '@/utils/useMobile'
 
 export default function EffectivenessBarChart() {
     const { query } = useEffectiveness()
     const [semanas, setSemanas] = useState('1')
     const now = moment()
+    const isMobile = useIsMobile()
 
     const effectivenessData = (query.data || [])
         .filter((item) => {
@@ -78,7 +80,7 @@ export default function EffectivenessBarChart() {
                         Efetividade dos Dirigentes ({semanas === 'todas' ? 'últimos 30 dias' : `últimas ${semanas} semana(s)`})
                     </CardTitle>
                     <Select value={semanas} onValueChange={setSemanas}>
-                        <SelectTrigger className="w-52">
+                        <SelectTrigger title={isMobile ? 'Não é possível selecionar esta opção no modo mobile' : `últimas ${semanas} semana(s)`} disabled={isMobile} className="w-52">
                             <SelectValue placeholder="Últimas semanas" />
                         </SelectTrigger>
                         <SelectContent>
@@ -111,9 +113,13 @@ export default function EffectivenessBarChart() {
                             />
                             {/* <YAxis allowDecimals={false} /> */}
                             <Tooltip
-                                formatter={(value: number, key: string) =>
-                                    [`${value}`, key === 'total' ? 'Enviados' : 'Completados']
-                                }
+                                formatter={(value: number, key: string) => {
+                                    const labelMap: Record<string, string> = {
+                                        total: 'Enviados',
+                                        trabalhado: 'Completados',
+                                    }
+                                    return [`${value}`, labelMap[key] || key]
+                                }}
                                 labelFormatter={(label: string) => {
                                     const item = effectivenessData.find((d) => d.name === label)
                                     return item?.fullLabel || label
