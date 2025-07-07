@@ -6,6 +6,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
+import { WeekAndTerritoryDTO } from "@/dtos/weekAndTerritoryDto";
 import { useHeatMapWeekAndTerritory } from "@/services/roundsService";
 import { ThreeDot } from "react-loading-indicators";
 
@@ -33,16 +34,7 @@ const getColor = (valor: number) => {
     return "#ffffff";                   // nenhum
 };
 
-export default function TabelaHeatmapTerritorios() {
-    const { query: { data, isLoading } } = useHeatMapWeekAndTerritory();
-
-    if (isLoading)
-        return (
-            <div className="w-full h-full flex justify-center items-center flex-col gap-2 animate-pulse">
-                <ThreeDot color="#2563eb" size="medium" text="" textColor="" />
-                <div className="text-sm text-blue-500">Carregando</div>
-            </div>
-        );
+export default function TabelaHeatmapTerritorios({ data }: { data: WeekAndTerritoryDTO[] | undefined }) {
 
     return (
         <Card className="w-full overflow-auto">

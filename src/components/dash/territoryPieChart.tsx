@@ -6,8 +6,8 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import { useHeatMapWeekAndTerritory } from "@/services/roundsService";
-import { ThreeDot } from "react-loading-indicators";
+import { WeekAndTerritoryDTO } from "@/dtos/weekAndTerritoryDto";
+import { useIsMobile } from "@/utils/useMobile";
 
 import {
     PieChart,
@@ -20,33 +20,31 @@ import {
 
 const _take_value = 10
 
-export default function PieChartTerritorios() {
-    const { query: { data, isLoading } } = useHeatMapWeekAndTerritory();
-    const take_data = data?.slice(0, _take_value);
-    if (isLoading)
-        return (
-            <></>
-        );
+interface props {
+    type: "more_work" | "less_work"
+    pieces?: number
+    data: WeekAndTerritoryDTO[] | undefined
+}
 
-    const pizzaData = take_data
+export default function PieChartTerritorios({ type, pieces = _take_value, data }: props) {
+    const isMobile = useIsMobile();
+    const pizzaData = data
         ?.map((t) => {
             const total = Number(t.segunda) + Number(t.terca) + Number(t.quarta) + Number(t.quinta) + Number(t.sexta) + Number(t.sabado) + Number(t.domingo);
-
             const obj = {
                 name: `T${t.territorio}`,
                 value: Number(total),
             };
-
-
             return obj
         })
-        .sort((a, b) => b.value - a.value)
-        .slice(0, _take_value);
+        .sort((a, b) => type === "more_work" ? b.value - a.value : a.value - b.value)
+        .slice(0, pieces);
+
 
     return (
         <Card className="w-full overflow-auto">
             <CardHeader>
-                <CardTitle>{_take_value} Territórios mais trabalhados</CardTitle>
+                <CardTitle>{pieces} Territórios {type === "more_work" ? "mais" : "menos"} trabalhados</CardTitle>
             </CardHeader>
             <CardContent>
                 <div>
@@ -70,7 +68,7 @@ export default function PieChartTerritorios() {
                                         ))}
                                     </Pie>
                                     <Tooltip />
-                                    <Legend layout="radial" verticalAlign="bottom" align="right" />
+                                    {!isMobile && <Legend layout={"radial"} verticalAlign="bottom" align="right" />}
                                 </PieChart>
                             </ResponsiveContainer>
                         ) : (

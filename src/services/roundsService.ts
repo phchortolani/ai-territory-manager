@@ -78,6 +78,7 @@ export function useHeatMapWeekAndTerritory() {
         queryKey: ['useHeatMapWeekAndTerritory'],
         queryFn: async () => await ApiClient().get<WeekAndTerritoryDTO[]>(controller + `/heatmap/weekly`).then((response) => response.data),
         retry: false,
+        keepPreviousData: true
     });
 
     if (query.isError) {
