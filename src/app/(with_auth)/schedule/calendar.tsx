@@ -1,5 +1,5 @@
 'use client'
-import { ChevronRightIcon, ChevronLeftIcon, ExclamationTriangleIcon, CheckCircleIcon, XCircleIcon, BriefcaseIcon, VideoCameraIcon, ArrowDownCircleIcon } from '@heroicons/react/24/outline'
+import { ChevronRightIcon, ChevronLeftIcon, ExclamationTriangleIcon, CheckCircleIcon, XCircleIcon, BriefcaseIcon, VideoCameraIcon } from '@heroicons/react/24/outline'
 import {
     add,
     eachDayOfInterval,
@@ -38,6 +38,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DialogTitle } from '@radix-ui/react-dialog'
 import { Pencil1Icon, PlusIcon, TrashIcon } from '@radix-ui/react-icons'
 import { toast } from '@/hooks/use-toast'
+import { getAvaliablesTerritories } from '@/services/territoriesService'
 
 
 
@@ -49,6 +50,8 @@ function classNames(...classes: any[]) {
 const schema = z.object({
     leader_id: z.number(),
     repeat_next_week: z.boolean().optional().default(false),
+    territories: z.array(z.string()).optional().default([]),
+    not_use_ia: z.boolean().optional().default(false),
 }).required()
 
 export default function Calendar() {
@@ -62,7 +65,10 @@ export default function Calendar() {
     const [msg, setMsg] = useState<string>("")
     const [isDeleting, setIsDeleting] = useState<boolean>(false)
 
+
+    const { data: territoriesData } = useQuery({ queryFn: async () => (await getAvaliablesTerritories()), queryKey: ["getAvaliablesTerritories"], refetchOnWindowFocus: false });
     const { data: schedule, isLoading, refetch } = useQuery({ queryFn: async () => await getRoundsByStatus(), queryKey: ["getRoundsByStatus"], cacheTime: 10000, refetchOnWindowFocus: false });
+
     const { data: leaders } = useQuery({
         queryFn: async () => await getLeaders(),
         queryKey: ["getLeaders"],
@@ -70,6 +76,7 @@ export default function Calendar() {
         cacheTime: 10000,
     });
 
+    const { register, handleSubmit, formState: { errors }, getValues, setValue, watch, reset } = useForm<ISchedule>({ resolver: zodResolver(schema) })
 
     let firstDayCurrentMonth = parse(currentMonth, 'MMM-yyyy', new Date())
 
@@ -130,21 +137,31 @@ export default function Calendar() {
 
     }
 
-    const { register, handleSubmit, formState: { errors }, getValues, setValue } = useForm<ISchedule>({ resolver: zodResolver(schema) })
+
+
 
     async function submit(schedule: ISchedule) {
+
+
         setLoading(true)
-        await Schedule({
+        let scheduleObj = {
             ...schedule,
             first_day: selectedDay,
-            not_use_ia: false,
             notificar_whatsapp: false,
-            repeat_next_week: false
-        })
+            repeat_next_week: false,
+            not_use_ia: schedule.not_use_ia
+        };
+
+        await Schedule(scheduleObj)
             .then(response => {
-                if (response)
+                if (response) {
                     setMsg(response)
-            }).finally(() => setLoading(false))
+                    queryClient.invalidateQueries({ queryKey: ["getAvaliablesTerritories"] })
+                }
+            }).finally(() => {
+                setLoading(false)
+                reset()
+            })
     }
 
     function CloseModal() {
@@ -203,49 +220,76 @@ export default function Calendar() {
 
     return (
         <div className='min-w-full'>
+
             <Dialog open={modalOpen} onOpenChange={CloseModal}>
-
-                <DialogContent className="max-w-[600px] ">
+                {/* Responsive modal: full width on mobile, fixed on larger screens */}
+                <DialogContent className='w-[96vw] max-w-[96vw] sm:max-w-[640px] h-[85vh] sm:h-[calc(100vh-100px)] p-4 overflow-y-auto'>
                     <DialogHeader>
-                        <DialogTitle className='text-lg font-medium'>Agendar</DialogTitle>
+                        <DialogTitle className='text-base sm:text-lg font-medium'>Agendar</DialogTitle>
                     </DialogHeader>
-                    <form className='flex-1' action='post' method='POST' onSubmit={handleSubmit(submit)}>
-                        <div className='flex flex-col justify-between h-full gap-2'>
-                            <div className='flex flex-col flex-1 gap-2'>
-                                <label htmlFor='leader'>Dirigente</label>
-                                <Select {...register("leader_id")} onValueChange={(value) => setValue('leader_id', Number(value))}>
-                                    <SelectTrigger className="w-full" >
-                                        <SelectValue placeholder="Selecione..." />
-                                    </SelectTrigger>
-                                    <SelectContent  >
-                                        {leaders?.map(x => <SelectItem value={x?.id.toString()} key={x.id}>{x.id} - {x.name}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                                {msg && <div className='p-2 flex bg-slate-200 rounded-md shadow-sm font-mono gap-2 '><b>Agendamento:</b>
-                                    <pre dangerouslySetInnerHTML={{ __html: msg }}></pre>
-                                </div>}
-                            </div>
+                    {
+                        modalOpen && <>
+                            <form className='flex-1' action='post' method='POST' onSubmit={handleSubmit(submit)}>
+                                <div className='flex flex-col justify-between h-full gap-3'>
+                                    <div className='flex flex-col flex-1 gap-3'>
+                                        <label htmlFor='leader' className='text-sm font-medium'>Dirigente</label>
+                                        <Select {...register('leader_id')} onValueChange={(value) => setValue('leader_id', Number(value))}>
+                                            <SelectTrigger className='w-full'>
+                                                <SelectValue placeholder='Selecione o dirigente...' />
+                                            </SelectTrigger>
+                                            <SelectContent className='max-h-64'>
+                                                {leaders?.map(x => (
+                                                    <SelectItem className='cursor-pointer' value={x?.id.toString()} key={x.id}>{x.id} - {x.name}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
 
-                            {/*         <div className='mt-2 '>
-                                <div className='flex flex-row gap-2 items-center'>
-                                    <input type='checkbox'
-                                        {...register('repeat_next_week')}
-                                        name='repeat_next_week'
-                                        defaultChecked={true} />
-                                    <span>Repetir Semana</span>
+                                        <Select {...register('not_use_ia')} defaultValue='IA' onValueChange={(value) => setValue('not_use_ia', value.trim().toLowerCase() === 'manual'.trim().toLowerCase())}>
+                                            <SelectTrigger className='w-full'>
+                                                <SelectValue placeholder='Selecione o método de geração...' />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem className='cursor-pointer' value={'manual'}>Selecionar Territórios</SelectItem>
+                                                <SelectItem className='cursor-pointer' value={'IA'}>Gerar Automaticamente</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+
+                                        {watch('not_use_ia') && (
+                                            <div className='max-h-64 overflow-auto rounded-md border p-2'>
+                                                <div className='grid grid-cols-4 xs:grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2'>
+                                                    {territoriesData?.map((t: any) => (
+                                                        <label key={t.id} className="flex items-center gap-2 text-sm">
+                                                            <input
+                                                                type="checkbox"
+                                                                value={t.id}
+                                                                {...register('territories')}
+                                                            />
+                                                            {t.id}
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {msg && (
+                                            <div className='p-2 bg-slate-100 rounded-md shadow-sm font-mono text-xs sm:text-sm overflow-auto'>
+                                                <b>Agendamento:</b>
+                                                <pre className='whitespace-pre-wrap break-words' dangerouslySetInnerHTML={{ __html: msg }} />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <hr className='my-1' />
+                                    <div>
+                                        <Button disabled={loading} type='submit' className='w-full sm:w-auto disabled:cursor-not-allowed disabled:opacity-50'>
+                                            {loading ? 'Agendando...' : 'Agendar'}
+                                        </Button>
+                                    </div>
                                 </div>
+                            </form>
+                        </>
+                    }
 
-                            </div> */}
-                            <hr></hr>
-                            <div>
-
-                                <Button disabled={loading} type="submit" className='w-full md:w-auto disabled:cursor-not-allowed disabled:opacity-50'>
-                                    {loading ? 'Agendando...' : 'Agendar'}
-                                </Button>
-                            </div>
-                        </div>
-
-                    </form>
                 </DialogContent>
             </Dialog>
             <div className="px-4 sm:px-7 min-w-full   md:px-6 md:min-w-[calc(100vw-200px)]">
