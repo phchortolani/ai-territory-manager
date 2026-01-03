@@ -7,4 +7,6 @@ export interface ISchedule {
     notificar_whatsapp?: boolean,
     house_number?: number,
     leader_id?: number
+    business_number?: number,
+    is_business?: boolean
 }

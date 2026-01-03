@@ -21,9 +21,9 @@ export async function getTerritories(): Promise<TupleTerritoryAndress> {
 }
 
 
-export async function getAvaliablesTerritories(): Promise<Territory[]> {
+export async function getAvaliablesTerritories(isBusiness: boolean): Promise<Territory[]> {
    try {
-      const response = (await ApiClient().get(controller + `/getAvailableTerritories`))
+      const response = (await ApiClient().get(controller + `/getAvailableTerritories?isBusiness=${isBusiness}`))
 
       if (response.status === 200 && response.data) return response.data
       else {

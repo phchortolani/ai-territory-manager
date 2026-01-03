@@ -7,5 +7,6 @@ export interface RoundsDto {
     campaign?: string;
     status?: string;
     territory_id: number,
-    uid?: string
+    uid?: string,
+    is_business?: boolean
 }

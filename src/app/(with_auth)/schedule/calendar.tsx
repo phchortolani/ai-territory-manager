@@ -1,5 +1,5 @@
 'use client'
-import { ChevronRightIcon, ChevronLeftIcon, ExclamationTriangleIcon, CheckCircleIcon, XCircleIcon, BriefcaseIcon, VideoCameraIcon } from '@heroicons/react/24/outline'
+import { ChevronRightIcon, ChevronLeftIcon, ExclamationTriangleIcon, CheckCircleIcon, XCircleIcon, BriefcaseIcon, VideoCameraIcon, ShieldCheckIcon } from '@heroicons/react/24/outline'
 import {
     add,
     eachDayOfInterval,
@@ -52,6 +52,7 @@ const schema = z.object({
     repeat_next_week: z.boolean().optional().default(false),
     territories: z.array(z.string()).optional().default([]),
     not_use_ia: z.boolean().optional().default(false),
+    is_business: z.boolean().optional().default(false),
 }).required()
 
 export default function Calendar() {
@@ -64,9 +65,8 @@ export default function Calendar() {
     const [edit, setEdit] = useState<boolean>(false)
     const [msg, setMsg] = useState<string>("")
     const [isDeleting, setIsDeleting] = useState<boolean>(false)
-
-
-    const { data: territoriesData } = useQuery({ queryFn: async () => (await getAvaliablesTerritories()), queryKey: ["getAvaliablesTerritories"], refetchOnWindowFocus: false });
+    const { register, handleSubmit, formState: { errors }, getValues, setValue, watch, reset } = useForm<ISchedule>({ resolver: zodResolver(schema) })
+    const { data: territoriesData } = useQuery({ queryFn: async () => (await getAvaliablesTerritories(getValues('is_business') ?? false)), queryKey: ["getAvaliablesTerritories"], refetchOnWindowFocus: false });
     const { data: schedule, isLoading, refetch } = useQuery({ queryFn: async () => await getRoundsByStatus(), queryKey: ["getRoundsByStatus"], cacheTime: 10000, refetchOnWindowFocus: false });
 
     const { data: leaders } = useQuery({
@@ -76,7 +76,6 @@ export default function Calendar() {
         cacheTime: 10000,
     });
 
-    const { register, handleSubmit, formState: { errors }, getValues, setValue, watch, reset } = useForm<ISchedule>({ resolver: zodResolver(schema) })
 
     let firstDayCurrentMonth = parse(currentMonth, 'MMM-yyyy', new Date())
 
@@ -141,15 +140,14 @@ export default function Calendar() {
 
 
     async function submit(schedule: ISchedule) {
-
-
         setLoading(true)
         let scheduleObj = {
             ...schedule,
             first_day: selectedDay,
             notificar_whatsapp: false,
             repeat_next_week: false,
-            not_use_ia: schedule.not_use_ia
+            not_use_ia: schedule.not_use_ia,
+            is_business: schedule.is_business,
         };
 
         await Schedule(scheduleObj)
@@ -158,7 +156,14 @@ export default function Calendar() {
                     setMsg(response)
                     queryClient.invalidateQueries({ queryKey: ["getAvaliablesTerritories"] })
                 }
-            }).finally(() => {
+            }).catch(error => {
+                toast({
+                    title: "Erro",
+                    className: 'bg-red-500 text-white',
+                    description: error?.error || "Erro ao agendar",
+                })
+            })
+            .finally(() => {
                 setLoading(false)
                 reset()
             })
@@ -168,6 +173,19 @@ export default function Calendar() {
         setOpenModal(false)
         queryClient.invalidateQueries({ queryKey: ["getRoundsByStatus"] })
         setMsg("")
+    }
+
+    async function SelecionarManual(value: string) {
+        setValue('not_use_ia', value.trim().toLowerCase() === 'manual'.trim().toLowerCase())
+        if (value.trim().toLowerCase() === 'manual'.trim().toLowerCase()) {
+            await queryClient.invalidateQueries({ queryKey: ["getAvaliablesTerritories"] })
+        }
+    }
+    async function SelecionarTipo(value: string) {
+        setValue('is_business', value.trim().toLowerCase() === 'business'.trim().toLowerCase())
+        if (getValues('not_use_ia')) {
+            await queryClient.invalidateQueries({ queryKey: ["getAvaliablesTerritories"] })
+        }
     }
 
     async function handleDeleteRound() {
@@ -244,13 +262,23 @@ export default function Calendar() {
                                             </SelectContent>
                                         </Select>
 
-                                        <Select {...register('not_use_ia')} defaultValue='IA' onValueChange={(value) => setValue('not_use_ia', value.trim().toLowerCase() === 'manual'.trim().toLowerCase())}>
+                                        <Select {...register('not_use_ia')} defaultValue='IA' onValueChange={(value) => SelecionarManual(value)}>
                                             <SelectTrigger className='w-full'>
                                                 <SelectValue placeholder='Selecione o método de geração...' />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem className='cursor-pointer' value={'manual'}>Selecionar Territórios</SelectItem>
                                                 <SelectItem className='cursor-pointer' value={'IA'}>Gerar Automaticamente</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+
+                                        <Select {...register('is_business')} onValueChange={(value) => SelecionarTipo(value)}>
+                                            <SelectTrigger className='w-full'>
+                                                <SelectValue placeholder='Selecione o tipo de agendamento...' />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem className='cursor-pointer' value={'house'}>Residencial</SelectItem>
+                                                <SelectItem className='cursor-pointer' value={'business'}>Comercial</SelectItem>
                                             </SelectContent>
                                         </Select>
 
@@ -476,11 +504,25 @@ function Round({ round, edit, refetch }: { round: RoundsDto, edit: boolean, refe
                 <img className="w-36   h-max items-center flex-none rounded-md  bg-gray-50 " src={`${round.territory_id}.png`} alt="" />
                 <div className='flex flex-col flex-1 '>
                     <div className='flex gap-2 justify-between '>
-                        <div className=" truncate text-md font-bold leading-5 text-gray-500 flex items-center  justify-start gap-2">{round.territory_id}</div>
+                        <div className=" truncate text-md font-bold leading-5 text-gray-500 flex rounded-full p-2 items-center  justify-start gap-2">{round.territory_id}</div>
                         <div className='flex flex-row gap-2 rounded-full items-center'>
                             {!edit && round.status}
-                            {icon}
+                            <div className='flex flex-col  gap-1 text-center'>
+                                {round.is_business &&
+                                    <div className='flex flex-row group items-center duration-250 hover:bg-purple-200 hover:rounded-full hover:pl-0.5'>
+                                        <ShieldCheckIcon className={`w-4 h-4 text-white px-0.5 rounded-full bg-purple-500`} />
+                                        <div className='hidden group-hover:flex opacity-0 duration-250 group-hover:opacity-100  flex-row items-center gap-1 px-0.5 rounded-r-full bg-purple-200'>
+                                            <span className=' text-[8px] text-purple-500 pr-0.5'>Comércio</span>
+                                        </div>
+                                    </div>
+
+                                }
+                                {icon}
+
+                            </div>
+
                         </div>
+
                     </div>
                     {/*  <div className="mb-2 truncate text-xs leading-5 text-gray-500 flex items-center  justify-start gap-2">{round.status}</div> */}
                     {
